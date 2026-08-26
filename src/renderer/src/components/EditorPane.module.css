@@ -1,0 +1,58 @@
+.pane {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--border-soft);
+  background-color: var(--surface-header);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.tabIcon {
+  display: flex;
+  color: var(--text-accent);
+}
+
+.tabName {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.tabPath {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-faint);
+  font-size: var(--text-xs);
+}
+
+.dirtyDot {
+  composes: dot from './parts.module.css';
+}
+
+.surface {
+  flex: 1;
+  min-height: 0;
+}
+
+.editor {
+  height: 100%;
+  width: 100%;
+}
+
+.editor :global(.monaco-editor),
+.editor :global(.monaco-editor .overflow-guard),
+.editor :global(.monaco-editor-background),
+.editor :global(.monaco-editor .margin) {
+  background: transparent;
+}

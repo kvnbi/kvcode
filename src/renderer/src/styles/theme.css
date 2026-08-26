@@ -1,0 +1,60 @@
+:root {
+  --surface-window: rgba(26, 26, 26, 0.82);
+  --surface-panel: rgba(34, 34, 34, 0.55);
+  --surface-editor: rgba(22, 22, 22, 0.6);
+  --surface-header: rgba(255, 255, 255, 0.025);
+  --surface-raised: rgba(255, 255, 255, 0.055);
+  --surface-hover: rgba(255, 255, 255, 0.05);
+  --surface-active: rgba(255, 255, 255, 0.1);
+
+  --border-soft: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  --text-primary: var(--kv-ink-0);
+  --text-secondary: var(--kv-ink-100);
+  --text-muted: var(--kv-ink-200);
+  --text-faint: var(--kv-ink-300);
+  --text-accent: var(--kv-silver-300);
+  --text-brand: var(--kv-silver-100);
+  --text-on-accent: var(--kv-ink-850);
+
+  --accent: var(--kv-silver-300);
+  --accent-hover: var(--kv-silver-200);
+  --accent-ring: rgba(255, 255, 255, 0.32);
+  --state-neutral: var(--kv-silver-200);
+
+  --scrollbar-thumb: rgba(255, 255, 255, 0.08);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.16);
+  --selection: rgba(255, 255, 255, 0.22);
+
+  --edge-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+
+  --glass-blur: 26px;
+
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.5);
+
+  --radius-sm: 6px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  --space-2: 8px;
+  --space-3: 12px;
+
+  --font-ui: "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-code: var(--font-ui);
+  --tracking-wordmark: 0.2em;
+
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-md: 13px;
+  --text-xl: 30px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+
+  --titlebar-height: 46px;
+  --statusbar-height: 26px;
+  --sidebar-width: 268px;
+}

@@ -1,0 +1,29 @@
+:root {
+  --kv-ink-950: #131313;
+  --kv-ink-900: #171717;
+  --kv-ink-850: #1b1b1b;
+  --kv-ink-800: #1f1f1f;
+  --kv-ink-750: #242424;
+  --kv-ink-700: #2b2b2b;
+  --kv-ink-600: #353535;
+  --kv-ink-500: #414141;
+  --kv-ink-400: #4f4f4f;
+  --kv-ink-300: #656565;
+  --kv-ink-200: #838383;
+  --kv-ink-100: #a6a6a6;
+  --kv-ink-50: #d2d2d2;
+  --kv-ink-0: #efefef;
+
+  --kv-silver-800: #5a5a5a;
+  --kv-silver-700: #767676;
+  --kv-silver-600: #949494;
+  --kv-silver-500: #b2b2b2;
+  --kv-silver-400: #cbcbcb;
+  --kv-silver-300: #dedede;
+  --kv-silver-200: #ededed;
+  --kv-silver-100: #f8f8f8;
+
+  --kv-signal-ok: #b6c4b2;
+  --kv-signal-warn: #d3c4a4;
+  --kv-signal-alert: #d3aca0;
+}
