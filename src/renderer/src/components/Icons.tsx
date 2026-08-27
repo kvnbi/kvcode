@@ -50,3 +50,11 @@ export function SaveIcon({ size = 14, className }: IconProps) {
     </svg>
   )
 }
+
+export function CloseIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M4.2 4.2 11.8 11.8M11.8 4.2 4.2 11.8" />
+    </svg>
+  )
+}

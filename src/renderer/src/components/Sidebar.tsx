@@ -1,38 +1,64 @@
 import { useEditorStore } from '@renderer/state/editorStore'
-import { FolderIcon } from './Icons'
+import type { Workspace } from '@shared/types'
+import { ChevronIcon, CloseIcon, FolderIcon } from './Icons'
 import { FileTree } from './FileTree'
 import styles from './Sidebar.module.css'
 
-export function Sidebar() {
-  const workspace = useEditorStore((state) => state.workspace)
-  const rootEntries = useEditorStore((state) =>
-    state.workspace ? state.entries[state.workspace.path] : undefined
+function Root({ workspace }: { workspace: Workspace }) {
+  const isExpanded = useEditorStore((state) => Boolean(state.expanded[workspace.path]))
+  const nodes = useEditorStore((state) => state.entries[workspace.path])
+  const toggleDirectory = useEditorStore((state) => state.toggleDirectory)
+  const closeFolder = useEditorStore((state) => state.closeFolder)
+
+  return (
+    <div className={styles.root}>
+      <div className={styles.rootRow}>
+        <button
+          type="button"
+          className={styles.rootToggle}
+          onClick={() => toggleDirectory(workspace.path)}
+          title={workspace.path}
+        >
+          <ChevronIcon
+            className={isExpanded ? `${styles.chevron} ${styles.chevronOpen}` : styles.chevron}
+          />
+          <span className={styles.rootName}>{workspace.name}</span>
+        </button>
+        <button
+          type="button"
+          className={styles.close}
+          onClick={() => closeFolder(workspace.path)}
+          title="Close folder"
+          aria-label={`Close ${workspace.name}`}
+        >
+          <CloseIcon size={12} />
+        </button>
+      </div>
+      {isExpanded && nodes ? <FileTree nodes={nodes} /> : null}
+    </div>
   )
-  const openWorkspace = useEditorStore((state) => state.openWorkspace)
+}
+
+export function Sidebar() {
+  const workspaces = useEditorStore((state) => state.workspaces)
+  const openFolders = useEditorStore((state) => state.openFolders)
 
   return (
     <aside className={styles.sidebar}>
-      <div className={styles.header}>
-        <span className={styles.headerIcon}>
-          <FolderIcon size={15} />
-        </span>
-        <div className={styles.headerTitle} title={workspace?.path}>
-          {workspace ? workspace.name : 'No folder open'}
+      {workspaces.length === 0 ? (
+        <div className={styles.empty}>
+          <button type="button" className={styles.emptyButton} onClick={openFolders}>
+            <FolderIcon size={13} />
+            Open Folder
+          </button>
         </div>
-      </div>
-
-      <div className={styles.scroll}>
-        {workspace && rootEntries ? (
-          <FileTree nodes={rootEntries} />
-        ) : (
-          <div className={styles.empty}>
-            <button type="button" className={styles.emptyButton} onClick={openWorkspace}>
-              <FolderIcon size={13} />
-              Open Folder
-            </button>
-          </div>
-        )}
-      </div>
+      ) : (
+        <div className={styles.scroll}>
+          {workspaces.map((workspace) => (
+            <Root key={workspace.path} workspace={workspace} />
+          ))}
+        </div>
+      )}
     </aside>
   )
 }

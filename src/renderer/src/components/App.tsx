@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { useEditorStore } from '@renderer/state/editorStore'
 import { EditorPane } from './EditorPane'
 import { Sidebar } from './Sidebar'
-import { StatusBar } from './StatusBar'
 import { TitleBar } from './TitleBar'
 import styles from './App.module.css'
 
@@ -17,7 +16,7 @@ export function App() {
 
       event.preventDefault()
       const store = useEditorStore.getState()
-      void (key === 's' ? store.save() : store.openWorkspace())
+      void (key === 's' ? store.save() : store.openFolders())
     }
 
     window.addEventListener('keydown', onKeyDown)
@@ -33,7 +32,6 @@ export function App() {
           <EditorPane />
         </main>
       </div>
-      <StatusBar />
     </div>
   )
 }

@@ -23,35 +23,9 @@
   color: var(--text-brand);
 }
 
-.title {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-}
-
-.titlePath {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 52ch;
-}
-
-.titleName {
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.dirtyDot {
-  composes: dot from './parts.module.css';
-}
-
 .actions {
   display: flex;
+  margin-left: auto;
   align-items: center;
   gap: var(--space-2);
   -webkit-app-region: no-drag;
@@ -84,12 +58,6 @@
 
 .button:active {
   transform: translateY(1px);
-}
-
-.button:disabled {
-  opacity: 0.36;
-  cursor: default;
-  transform: none;
 }
 
 .primary {

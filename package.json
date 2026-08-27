@@ -4,7 +4,7 @@
   "description": "A minimal code editor built on Electron, React and Monaco",
   "main": "./out/main/index.js",
   "author": "Kevin",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "private": true,
   "scripts": {
     "dev": "electron-vite dev",

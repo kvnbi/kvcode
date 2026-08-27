@@ -13,7 +13,6 @@
 
   --text-primary: var(--kv-ink-0);
   --text-secondary: var(--kv-ink-100);
-  --text-muted: var(--kv-ink-200);
   --text-faint: var(--kv-ink-300);
   --text-accent: var(--kv-silver-300);
   --text-brand: var(--kv-silver-100);
@@ -55,6 +54,5 @@
   --duration-normal: 200ms;
 
   --titlebar-height: 46px;
-  --statusbar-height: 26px;
   --sidebar-width: 268px;
 }

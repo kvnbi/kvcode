@@ -8,36 +8,80 @@
   background-color: var(--surface-panel);
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--border-soft);
-  background-color: var(--surface-header);
-}
-
-.headerIcon {
-  display: flex;
-  color: var(--text-accent);
-}
-
-.headerTitle {
-  min-width: 0;
-  flex: 1;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .scroll {
   flex: 1;
   min-height: 0;
   overflow: auto;
   padding: 8px 8px 14px;
+}
+
+.root {
+  margin-bottom: 6px;
+}
+
+.rootRow {
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
+}
+
+.rootRow:hover {
+  background: var(--surface-hover);
+}
+
+.rootToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding-left: 8px;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: left;
+}
+
+.rootName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  composes: chevron from './parts.module.css';
+}
+
+.chevronOpen {
+  composes: chevronOpen from './parts.module.css';
+}
+
+.close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  margin-right: 4px;
+  border-radius: var(--radius-sm);
+  color: var(--text-faint);
+  opacity: 0;
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+}
+
+.rootRow:hover .close,
+.close:focus-visible {
+  opacity: 1;
+}
+
+.close:hover {
+  color: var(--text-primary);
+  background-color: var(--surface-active);
 }
 
 .empty {

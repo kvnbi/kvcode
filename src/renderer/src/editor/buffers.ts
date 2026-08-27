@@ -1,3 +1,4 @@
+import { isUnder } from '@renderer/lib/path'
 import { monaco } from './monaco'
 import type { editor } from 'monaco-editor'
 
@@ -44,10 +45,11 @@ export function markSaved(path: string): void {
   }
 }
 
-export function disposeBuffers(): void {
-  for (const { model } of buffers.values()) {
-    model.dispose()
+export function disposeBuffersUnder(root: string): void {
+  for (const [path, buffer] of buffers) {
+    if (isUnder(root, path)) {
+      buffer.model.dispose()
+      buffers.delete(path)
+    }
   }
-
-  buffers.clear()
 }

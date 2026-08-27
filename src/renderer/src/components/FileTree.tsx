@@ -51,9 +51,11 @@ const TreeNode = memo(function TreeNode({ node, depth }: TreeNodeProps) {
       {isDirectory && isExpanded ? (
         <div className={styles.children}>
           {children === undefined ? (
-            <div className={styles.hint} style={{ paddingLeft: hintPadding }}>
-              {isPending ? 'Loading' : ''}
-            </div>
+            isPending ? (
+              <div className={styles.hint} style={{ paddingLeft: hintPadding }}>
+                Loading
+              </div>
+            ) : null
           ) : children.length === 0 ? (
             <div className={styles.hint} style={{ paddingLeft: hintPadding }}>
               Empty

@@ -26,6 +26,16 @@
   transform: translateY(1px);
 }
 
+.chevron {
+  flex: none;
+  color: var(--text-faint);
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+
+.chevronOpen {
+  transform: rotate(90deg);
+}
+
 .dot {
   width: 5px;
   height: 5px;

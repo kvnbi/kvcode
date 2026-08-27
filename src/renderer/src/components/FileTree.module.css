@@ -32,13 +32,11 @@
 }
 
 .chevron {
-  flex: none;
-  color: var(--text-faint);
-  transition: transform var(--duration-normal) var(--ease-out);
+  composes: chevron from './parts.module.css';
 }
 
 .chevronOpen {
-  transform: rotate(90deg);
+  composes: chevronOpen from './parts.module.css';
 }
 
 .chevronPlaceholder {

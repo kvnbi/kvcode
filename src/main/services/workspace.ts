@@ -20,6 +20,10 @@ export async function registerWorkspace(directory: string): Promise<Workspace> {
   return { name: basename(root) || root, path: root }
 }
 
+export function unregisterWorkspace(directory: string): void {
+  allowedRoots.delete(resolve(directory))
+}
+
 function assertAllowed(target: string): string {
   const candidate = resolve(target)
 

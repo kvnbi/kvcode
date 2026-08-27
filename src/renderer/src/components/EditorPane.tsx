@@ -1,6 +1,6 @@
 import { Suspense, lazy } from 'react'
 import { selectIsDirty, useEditorStore } from '@renderer/state/editorStore'
-import { basename, dirname, relativeTo } from '@renderer/lib/path'
+import { basename, dirname, displayPath } from '@renderer/lib/path'
 import { EmptyState } from './EmptyState'
 import { FileIcon } from './Icons'
 import styles from './EditorPane.module.css'
@@ -10,7 +10,7 @@ const CodeEditor = lazy(() =>
 )
 
 export function EditorPane() {
-  const workspace = useEditorStore((state) => state.workspace)
+  const workspaces = useEditorStore((state) => state.workspaces)
   const activePath = useEditorStore((state) => state.activePath)
   const isDirty = useEditorStore(selectIsDirty)
 
@@ -18,7 +18,7 @@ export function EditorPane() {
     return <EmptyState />
   }
 
-  const location = dirname(workspace ? relativeTo(workspace.path, activePath) : activePath)
+  const location = dirname(displayPath(workspaces, activePath))
 
   return (
     <div className={styles.pane}>

@@ -14,7 +14,8 @@ async function unwrap<T>(channel: string, ...args: unknown[]): Promise<T> {
 
 const api = {
   platform: process.platform,
-  openWorkspace: () => unwrap<Workspace | null>(IpcChannel.OpenWorkspace),
+  openFolders: () => unwrap<Workspace[]>(IpcChannel.OpenFolders),
+  closeFolder: (path: string) => unwrap<null>(IpcChannel.CloseFolder, path),
   readDirectory: (path: string) => unwrap<FileNode[]>(IpcChannel.ReadDirectory, path),
   readFile: (path: string) => unwrap<FileContent>(IpcChannel.ReadFile, path),
   writeFile: (path: string, text: string) => unwrap<null>(IpcChannel.WriteFile, path, text)
