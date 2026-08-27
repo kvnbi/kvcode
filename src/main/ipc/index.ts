@@ -1,7 +1,11 @@
 import { BrowserWindow, dialog, ipcMain } from 'electron'
 import { IpcChannel } from '@shared/ipc'
+import type { ChatEvent, ChatSettings } from '@shared/chat'
+import type { ProviderId } from '@shared/providers'
 import type { FileContent, FileNode, IpcResult, Workspace } from '@shared/types'
-import { readLayout, writeLayout } from '../services/settings'
+import { cancelTurn, resetSession, runTurn } from '../agent/session'
+import { clearApiKey, secretsAvailable, storedProviders, writeApiKey } from '../services/secrets'
+import { readLayout, readPreferences, writeLayout, writePreferences } from '../services/settings'
 import {
   readDirectory,
   readTextFile,
@@ -22,6 +26,18 @@ function handle<T>(channel: string, run: (...args: never[]) => Promise<T>): void
       return { ok: false, error: toMessage(error) }
     }
   })
+}
+
+function settings(): ChatSettings {
+  const preferences = readPreferences()
+
+  return {
+    mode: preferences.mode,
+    provider: preferences.provider,
+    baseUrl: preferences.baseUrl,
+    storedKeys: storedProviders(),
+    keychainAvailable: secretsAvailable()
+  }
 }
 
 export function registerIpcHandlers(): void {
@@ -57,5 +73,47 @@ export function registerIpcHandlers(): void {
   handle<null>(IpcChannel.WriteLayout, async (text: string) => {
     writeLayout(text)
     return null
+  })
+
+  handle<ChatSettings>(IpcChannel.ReadSettings, async () => settings())
+
+  handle<ChatSettings>(IpcChannel.WriteSettings, async (next: Partial<ChatSettings>) => {
+    const patch: Parameters<typeof writePreferences>[0] = {}
+
+    if (next.mode) patch.mode = next.mode
+    if (next.provider) patch.provider = next.provider
+    if (typeof next.baseUrl === 'string') patch.baseUrl = next.baseUrl
+
+    writePreferences(patch)
+    return settings()
+  })
+
+  handle<ChatSettings>(IpcChannel.WriteApiKey, async (provider: ProviderId, value: string) => {
+    writeApiKey(provider, value)
+    return settings()
+  })
+
+  handle<ChatSettings>(IpcChannel.ClearApiKey, async (provider: ProviderId) => {
+    clearApiKey(provider)
+    return settings()
+  })
+
+  handle<null>(IpcChannel.ChatReset, async () => {
+    resetSession()
+    return null
+  })
+
+  handle<null>(IpcChannel.ChatCancel, async () => {
+    cancelTurn()
+    return null
+  })
+
+  ipcMain.handle(IpcChannel.ChatSend, async (event, prompt: string) => {
+    const send = (payload: ChatEvent) => {
+      if (!event.sender.isDestroyed()) event.sender.send(IpcChannel.ChatEvent, payload)
+    }
+
+    await runTurn(prompt, send)
+    return { ok: true, value: null }
   })
 }

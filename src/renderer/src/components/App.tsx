@@ -5,6 +5,7 @@ import type { PanelId } from '@renderer/state/layoutStore'
 import { CodePanel } from './CodePanel'
 import { Divider } from './Divider'
 import { PromptPanel } from './PromptPanel'
+import { Settings } from './Settings'
 import { Panel } from './Panel'
 import { TitleBar } from './TitleBar'
 import styles from './App.module.css'
@@ -45,6 +46,7 @@ export function App() {
   const resizePanel = useLayoutStore((state) => state.resizePanel)
   const viewport = useViewportWidth()
   const hydrated = useHydrated()
+  const [showSettings, setShowSettings] = useState(false)
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -86,7 +88,7 @@ export function App() {
 
   return (
     <div className={styles.shell}>
-      <TitleBar />
+      <TitleBar onOpenSettings={() => setShowSettings(true)} />
       <div className={styles.body}>
         <PromptPanel width={flexPosition === 0 ? undefined : fitted.chatWidth} />
         {panels.map((id, index) => (
@@ -100,6 +102,7 @@ export function App() {
           </Fragment>
         ))}
       </div>
+      {showSettings ? <Settings onClose={() => setShowSettings(false)} /> : null}
     </div>
   )
 }

@@ -1,7 +1,42 @@
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.message {
+  font-size: var(--text-md);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.user {
+  padding: 8px 12px;
+  border-radius: var(--radius-control);
+  corner-shape: var(--corner);
+  background-color: var(--surface-raised);
+  color: var(--text-primary);
+}
+
+.assistant {
+  color: var(--text-secondary);
+}
+
+.tool {
+  color: var(--text-faint);
+  font-size: var(--text-xs);
+}
+
+.error {
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+
 .input {
   width: 100%;
-  height: var(--control-height);
-  padding: 0 12px;
+  padding: 8px 12px;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-control);
   corner-shape: var(--corner);
@@ -9,6 +44,8 @@
   color: var(--text-primary);
   font-family: var(--font-ui);
   font-size: var(--text-md);
+  line-height: 1.5;
+  resize: none;
 }
 
 .input::placeholder {

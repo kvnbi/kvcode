@@ -5,5 +5,13 @@ export const IpcChannel = {
   ReadFile: 'file:read',
   WriteFile: 'file:write',
   ReadLayout: 'layout:read',
-  WriteLayout: 'layout:write'
+  WriteLayout: 'layout:write',
+  ReadSettings: 'settings:read',
+  WriteSettings: 'settings:write',
+  WriteApiKey: 'settings:write-key',
+  ClearApiKey: 'settings:clear-key',
+  ChatSend: 'chat:send',
+  ChatCancel: 'chat:cancel',
+  ChatReset: 'chat:reset',
+  ChatEvent: 'chat:event'
 } as const

@@ -58,3 +58,26 @@
   color: var(--text-primary);
   background-color: var(--surface-active);
 }
+
+.settings {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--control-height);
+  height: var(--control-height);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-control);
+  corner-shape: var(--corner);
+  background-color: var(--surface-raised);
+  color: var(--text-faint);
+  -webkit-app-region: no-drag;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+}
+
+.settings:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}

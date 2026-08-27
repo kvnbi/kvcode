@@ -3,6 +3,15 @@ import { app, BrowserWindow, shell } from 'electron'
 
 const isMac = process.platform === 'darwin'
 
+function isExternalWebUrl(value: string): boolean {
+  try {
+    const protocol = new URL(value).protocol
+    return protocol === 'https:' || protocol === 'http:'
+  } catch {
+    return false
+  }
+}
+
 export function createMainWindow(): BrowserWindow {
   const window = new BrowserWindow({
     width: 1440,
@@ -17,17 +26,27 @@ export function createMainWindow(): BrowserWindow {
     trafficLightPosition: isMac ? { x: 18, y: 20 } : undefined,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false,
+      sandbox: true,
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      webSecurity: true,
+      allowRunningInsecureContent: false
     }
   })
 
   window.on('ready-to-show', () => window.show())
 
   window.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url)
+    if (isExternalWebUrl(url)) shell.openExternal(url)
     return { action: 'deny' }
+  })
+
+  window.webContents.on('will-navigate', (event, url) => {
+    if (url !== window.webContents.getURL()) event.preventDefault()
+  })
+
+  window.webContents.session.setPermissionRequestHandler((_contents, _permission, callback) => {
+    callback(false)
   })
 
   const devServerUrl = process.env['ELECTRON_RENDERER_URL']

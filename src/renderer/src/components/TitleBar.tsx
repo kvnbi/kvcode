@@ -1,5 +1,6 @@
 import { PANELS, useLayoutStore } from '@renderer/state/layoutStore'
 import type { PanelId } from '@renderer/state/layoutStore'
+import { GearIcon } from './Icons'
 import styles from './TitleBar.module.css'
 
 const LABELS: Record<PanelId, string> = {
@@ -10,7 +11,7 @@ const LABELS: Record<PanelId, string> = {
   terminal: 'Terminal'
 }
 
-export function TitleBar() {
+export function TitleBar({ onOpenSettings }: { onOpenSettings: () => void }) {
   const open = useLayoutStore((state) => state.open)
   const togglePanel = useLayoutStore((state) => state.togglePanel)
   const isMac = window.kvcode.platform === 'darwin'
@@ -34,6 +35,16 @@ export function TitleBar() {
           </button>
         ))}
       </div>
+
+      <button
+        type="button"
+        className={styles.settings}
+        onClick={onOpenSettings}
+        title="Settings"
+        aria-label="Settings"
+      >
+        <GearIcon size={15} />
+      </button>
     </header>
   )
 }
