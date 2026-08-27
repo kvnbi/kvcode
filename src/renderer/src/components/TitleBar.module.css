@@ -17,7 +17,7 @@
   flex: none;
   padding-left: 2px;
   font-family: var(--font-ui);
-  font-size: var(--text-sm);
+  font-size: var(--text-lg);
   font-weight: 650;
   letter-spacing: var(--tracking-wordmark);
   color: var(--text-brand);
@@ -35,8 +35,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 28px;
-  padding: 0 12px;
+  height: var(--control-height);
+  padding: 0 var(--control-padding);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-control);
   corner-shape: var(--corner);
@@ -63,8 +63,6 @@
 
 .primary {
   composes: solidButton from './parts.module.css';
-  height: 28px;
-  padding: 0 12px;
 }
 
 .primary:disabled {

@@ -87,11 +87,9 @@
 }
 
 .empty {
-  padding: 14px 8px;
+  padding: 8px;
 }
 
 .emptyButton {
   composes: solidButton from './parts.module.css';
-  height: 30px;
-  padding: 0 14px;
 }

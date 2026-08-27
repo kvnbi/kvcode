@@ -14,7 +14,7 @@ export function createMainWindow(): BrowserWindow {
     vibrancy: isMac ? 'under-window' : undefined,
     visualEffectState: 'active',
     titleBarStyle: isMac ? 'hiddenInset' : 'default',
-    trafficLightPosition: isMac ? { x: 18, y: 18 } : undefined,
+    trafficLightPosition: isMac ? { x: 18, y: 20 } : undefined,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,

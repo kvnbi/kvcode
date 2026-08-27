@@ -5,6 +5,7 @@ import type { editor } from 'monaco-editor'
 interface Buffer {
   model: editor.ITextModel
   savedVersionId: number
+  savedText: string
 }
 
 const buffers = new Map<string, Buffer>()
@@ -19,7 +20,11 @@ export function openBuffer(path: string, text: string): editor.ITextModel {
   if (existing) return existing.model
 
   const model = monaco.editor.createModel(text, undefined, monaco.Uri.file(path))
-  buffers.set(path, { model, savedVersionId: model.getAlternativeVersionId() })
+  buffers.set(path, {
+    model,
+    savedVersionId: model.getAlternativeVersionId(),
+    savedText: model.getValue()
+  })
 
   return model
 }
@@ -34,7 +39,14 @@ export function readBuffer(path: string): string | null {
 
 export function isBufferDirty(path: string): boolean {
   const buffer = buffers.get(path)
-  return buffer ? buffer.model.getAlternativeVersionId() !== buffer.savedVersionId : false
+
+  if (!buffer) return false
+
+  if (buffer.model.getAlternativeVersionId() === buffer.savedVersionId) return false
+
+  if (buffer.model.getValueLength() !== buffer.savedText.length) return true
+
+  return buffer.model.getValue() !== buffer.savedText
 }
 
 export function markSaved(path: string): void {
@@ -42,6 +54,7 @@ export function markSaved(path: string): void {
 
   if (buffer) {
     buffer.savedVersionId = buffer.model.getAlternativeVersionId()
+    buffer.savedText = buffer.model.getValue()
   }
 }
 

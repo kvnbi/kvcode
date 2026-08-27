@@ -27,15 +27,6 @@
   color: var(--text-primary);
 }
 
-.tabPath {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--text-faint);
-  font-size: var(--text-xs);
-}
-
 .dirtyDot {
   composes: dot from './parts.module.css';
 }

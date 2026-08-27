@@ -46,15 +46,19 @@
   --font-code: var(--font-ui);
   --tracking-wordmark: 0.2em;
 
+  --control-height: 32px;
+  --control-padding: 14px;
+
   --text-xs: 11px;
   --text-sm: 12px;
   --text-md: 13px;
+  --text-lg: 14px;
   --text-xl: 30px;
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --duration-fast: 120ms;
   --duration-normal: 200ms;
 
-  --titlebar-height: 46px;
+  --titlebar-height: 52px;
   --sidebar-width: 268px;
 }
