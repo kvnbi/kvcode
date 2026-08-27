@@ -3,5 +3,7 @@ export const IpcChannel = {
   CloseFolder: 'folders:close',
   ReadDirectory: 'folders:read-directory',
   ReadFile: 'file:read',
-  WriteFile: 'file:write'
+  WriteFile: 'file:write',
+  ReadLayout: 'layout:read',
+  WriteLayout: 'layout:write'
 } as const

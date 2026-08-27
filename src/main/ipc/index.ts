@@ -1,6 +1,7 @@
 import { BrowserWindow, dialog, ipcMain } from 'electron'
 import { IpcChannel } from '@shared/ipc'
 import type { FileContent, FileNode, IpcResult, Workspace } from '@shared/types'
+import { readLayout, writeLayout } from '../services/settings'
 import {
   readDirectory,
   readTextFile,
@@ -48,6 +49,13 @@ export function registerIpcHandlers(): void {
   handle<FileContent>(IpcChannel.ReadFile, (path: string) => readTextFile(path))
   handle<null>(IpcChannel.WriteFile, async (path: string, text: string) => {
     await writeTextFile(path, text)
+    return null
+  })
+
+  handle<string | null>(IpcChannel.ReadLayout, async () => readLayout())
+
+  handle<null>(IpcChannel.WriteLayout, async (text: string) => {
+    writeLayout(text)
     return null
   })
 }

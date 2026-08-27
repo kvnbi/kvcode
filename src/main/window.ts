@@ -5,9 +5,9 @@ const isMac = process.platform === 'darwin'
 
 export function createMainWindow(): BrowserWindow {
   const window = new BrowserWindow({
-    width: 1280,
-    height: 820,
-    minWidth: 900,
+    width: 1440,
+    height: 860,
+    minWidth: 1100,
     minHeight: 600,
     show: false,
     backgroundColor: isMac ? '#00000000' : '#1a1a1a',

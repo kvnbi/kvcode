@@ -42,15 +42,6 @@ export function FileIcon({ size = 14, className }: IconProps) {
   )
 }
 
-export function SaveIcon({ size = 14, className }: IconProps) {
-  return (
-    <svg {...base(size)} className={className}>
-      <path d="M3.4 2.6h7l2.6 2.6v7.4c0 .55-.45 1-1 1H3.4c-.55 0-1-.45-1-1V3.6c0-.55.45-1 1-1Z" />
-      <path d="M5.2 2.6v3.6h5.2V2.6M5.2 13.6V9.8h5.6v3.8" />
-    </svg>
-  )
-}
-
 export function CloseIcon({ size = 14, className }: IconProps) {
   return (
     <svg {...base(size)} className={className}>

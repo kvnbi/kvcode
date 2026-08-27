@@ -1,12 +1,18 @@
-import { selectIsDirty, useEditorStore } from '@renderer/state/editorStore'
-import { FolderIcon, SaveIcon } from './Icons'
+import { PANELS, useLayoutStore } from '@renderer/state/layoutStore'
+import type { PanelId } from '@renderer/state/layoutStore'
 import styles from './TitleBar.module.css'
 
+const LABELS: Record<PanelId, string> = {
+  code: 'Code',
+  diff: 'Diff',
+  output: 'Output',
+  browser: 'Browser',
+  terminal: 'Terminal'
+}
+
 export function TitleBar() {
-  const isDirty = useEditorStore(selectIsDirty)
-  const isSaving = useEditorStore((state) => state.isSaving)
-  const openFolders = useEditorStore((state) => state.openFolders)
-  const save = useEditorStore((state) => state.save)
+  const open = useLayoutStore((state) => state.open)
+  const togglePanel = useLayoutStore((state) => state.togglePanel)
   const isMac = window.kvcode.platform === 'darwin'
 
   return (
@@ -15,20 +21,18 @@ export function TitleBar() {
 
       <div className={styles.brand}>KVCODE</div>
 
-      <div className={styles.actions}>
-        <button type="button" className={styles.button} onClick={openFolders}>
-          <FolderIcon size={13} />
-          Open Folder
-        </button>
-        <button
-          type="button"
-          className={styles.primary}
-          onClick={save}
-          disabled={!isDirty || isSaving}
-        >
-          <SaveIcon size={13} />
-          {isSaving ? 'Saving' : 'Save'}
-        </button>
+      <div className={styles.toggles}>
+        {PANELS.map((id) => (
+          <button
+            key={id}
+            type="button"
+            className={open[id] ? `${styles.toggle} ${styles.toggleOn}` : styles.toggle}
+            aria-pressed={open[id]}
+            onClick={() => togglePanel(id)}
+          >
+            {LABELS[id]}
+          </button>
+        ))}
       </div>
     </header>
   )

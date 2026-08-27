@@ -1,0 +1,20 @@
+.code {
+  display: flex;
+  flex: none;
+  min-height: 0;
+  gap: 10px;
+}
+
+.flexible {
+  flex: 1;
+  min-width: 0;
+}
+
+.editor {
+  composes: panel from './parts.module.css';
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 260px;
+  background-color: var(--surface-editor);
+}

@@ -1,22 +1,14 @@
 .shell {
   display: grid;
   grid-template-rows: var(--titlebar-height) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   height: 100%;
   background-color: var(--surface-window);
 }
 
 .body {
   display: flex;
-  gap: 10px;
   min-height: 0;
+  overflow: hidden;
   padding: 0 10px 10px;
-}
-
-.workArea {
-  composes: panel from './parts.module.css';
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-width: 0;
-  background-color: var(--surface-editor);
 }

@@ -1,7 +1,6 @@
 import { Suspense, lazy } from 'react'
 import { selectIsDirty, useEditorStore } from '@renderer/state/editorStore'
 import { basename } from '@renderer/lib/path'
-import { EmptyState } from './EmptyState'
 import { FileIcon } from './Icons'
 import styles from './EditorPane.module.css'
 
@@ -13,9 +12,7 @@ export function EditorPane() {
   const activePath = useEditorStore((state) => state.activePath)
   const isDirty = useEditorStore(selectIsDirty)
 
-  if (!activePath) {
-    return <EmptyState />
-  }
+  if (!activePath) return null
 
   return (
     <div className={styles.pane}>

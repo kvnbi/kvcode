@@ -1,0 +1,21 @@
+.divider {
+  position: relative;
+  width: 10px;
+  flex: none;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.divider::after {
+  content: "";
+  position: absolute;
+  inset: 10px 4px;
+  border-radius: var(--radius-round);
+  background-color: transparent;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.divider:hover::after,
+.divider:active::after {
+  background-color: var(--border-strong);
+}

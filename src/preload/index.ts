@@ -18,7 +18,9 @@ const api = {
   closeFolder: (path: string) => unwrap<null>(IpcChannel.CloseFolder, path),
   readDirectory: (path: string) => unwrap<FileNode[]>(IpcChannel.ReadDirectory, path),
   readFile: (path: string) => unwrap<FileContent>(IpcChannel.ReadFile, path),
-  writeFile: (path: string, text: string) => unwrap<null>(IpcChannel.WriteFile, path, text)
+  writeFile: (path: string, text: string) => unwrap<null>(IpcChannel.WriteFile, path, text),
+  readLayout: () => unwrap<string | null>(IpcChannel.ReadLayout),
+  writeLayout: (text: string) => unwrap<null>(IpcChannel.WriteLayout, text)
 }
 
 export type KvcodeApi = typeof api

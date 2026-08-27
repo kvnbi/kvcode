@@ -1,0 +1,38 @@
+.panel {
+  composes: panel from './parts.module.css';
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  min-height: 0;
+  background-color: var(--surface-panel);
+}
+
+.flexible {
+  flex: 1;
+  min-width: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  flex: none;
+  height: 38px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--border-soft);
+  background-color: var(--surface-header);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.footer {
+  flex: none;
+  padding: 8px;
+  border-top: 1px solid var(--border-soft);
+}
