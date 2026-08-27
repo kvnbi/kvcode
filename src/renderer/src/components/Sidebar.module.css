@@ -22,7 +22,8 @@
 .rootRow {
   display: flex;
   align-items: center;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-row);
+  corner-shape: var(--corner);
 }
 
 .rootRow:hover {
@@ -65,7 +66,8 @@
   height: 22px;
   flex: none;
   margin-right: 4px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-row);
+  corner-shape: var(--corner);
   color: var(--text-faint);
   opacity: 0;
   transition:

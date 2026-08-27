@@ -62,3 +62,12 @@ button {
   background: var(--scrollbar-thumb-hover);
   background-clip: content-box;
 }
+
+.monaco-editor .suggest-widget,
+.monaco-editor .suggest-widget .monaco-list,
+.monaco-editor .suggest-details,
+.monaco-editor .monaco-hover,
+.monaco-editor .parameter-hints-widget {
+  border-radius: var(--radius-control);
+  corner-shape: var(--corner);
+}

@@ -1,7 +1,8 @@
 .panel {
   overflow: hidden;
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-panel);
+  corner-shape: var(--corner);
   box-shadow: var(--shadow-lg), var(--edge-highlight);
   backdrop-filter: blur(var(--glass-blur)) saturate(115%);
 }
@@ -10,7 +11,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-control);
+  corner-shape: var(--corner);
   background-color: var(--accent);
   color: var(--text-on-accent);
   font-size: var(--text-sm);
@@ -40,6 +42,6 @@
   width: 5px;
   height: 5px;
   flex: none;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-round);
   background: var(--state-neutral);
 }

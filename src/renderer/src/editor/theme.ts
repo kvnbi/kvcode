@@ -2,6 +2,18 @@ import type { editor } from 'monaco-editor'
 
 export const KVCODE_THEME = 'kvcode-dark'
 
+const SYMBOL_KINDS = [
+  'array', 'boolean', 'class', 'color', 'constant', 'constructor', 'enumerator',
+  'enumeratorMember', 'event', 'field', 'file', 'folder', 'function', 'interface',
+  'key', 'keyword', 'method', 'module', 'namespace', 'null', 'number', 'object',
+  'operator', 'package', 'property', 'reference', 'snippet', 'string', 'struct',
+  'text', 'typeParameter', 'unit', 'variable'
+]
+
+const symbolIconColors = Object.fromEntries(
+  SYMBOL_KINDS.map((kind) => [`symbolIcon.${kind}Foreground`, '#b4b4b4'])
+)
+
 export const kvcodeTheme: editor.IStandaloneThemeData = {
   base: 'vs-dark',
   inherit: true,
@@ -31,6 +43,7 @@ export const kvcodeTheme: editor.IStandaloneThemeData = {
     { token: 'metatag', foreground: 'f6f6f6' }
   ],
   colors: {
+    ...symbolIconColors,
     'editor.background': '#00000000',
     'editor.foreground': '#c9c9c9',
     'editorCursor.foreground': '#f4f4f4',
@@ -68,6 +81,26 @@ export const kvcodeTheme: editor.IStandaloneThemeData = {
     'editorSuggestWidget.background': '#242424f7',
     'editorSuggestWidget.border': '#ffffff1f',
     'editorSuggestWidget.selectedBackground': '#ffffff14',
+    'editorSuggestWidget.foreground': '#c9c9c9',
+    'editorSuggestWidget.selectedForeground': '#f6f6f6',
+    'editorSuggestWidget.highlightForeground': '#f6f6f6',
+    'editorSuggestWidget.focusHighlightForeground': '#f6f6f6',
+    'editorSuggestWidgetStatus.foreground': '#8f8f8f',
+    'editorWidget.foreground': '#c9c9c9',
+    'editorHoverWidget.foreground': '#c9c9c9',
+    'descriptionForeground': '#8f8f8f',
+    'textLink.foreground': '#ededed',
+    'textLink.activeForeground': '#f6f6f6',
+    'editorLink.activeForeground': '#f6f6f6',
+    'list.highlightForeground': '#f6f6f6',
+    'list.focusHighlightForeground': '#f6f6f6',
+    'list.hoverBackground': '#ffffff0d',
+    'list.focusBackground': '#ffffff14',
+    'list.focusForeground': '#f6f6f6',
+    'list.activeSelectionBackground': '#ffffff14',
+    'list.activeSelectionForeground': '#f6f6f6',
+    'list.inactiveSelectionBackground': '#ffffff0d',
+    'progressBar.background': '#b2b2b2',
     'editorHoverWidget.background': '#242424f7',
     'editorHoverWidget.border': '#ffffff1f',
     'input.background': '#2b2b2b',
