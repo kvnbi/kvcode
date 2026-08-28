@@ -2,6 +2,7 @@ import type { ProviderId } from './providers'
 
 export type ChatEvent =
   | { type: 'start' }
+  | { type: 'session'; id: string }
   | { type: 'text'; delta: string }
   | { type: 'tool'; name: string; detail: string }
   | { type: 'file'; path: string }

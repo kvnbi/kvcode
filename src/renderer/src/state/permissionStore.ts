@@ -4,6 +4,7 @@ import type { PermissionDecision, PermissionRequest } from '@shared/permissions'
 interface PermissionState {
   queue: PermissionRequest[]
   decide: (decision: PermissionDecision) => void
+  denyAll: () => void
 }
 
 export const usePermissionStore = create<PermissionState>((set, get) => ({
@@ -15,6 +16,13 @@ export const usePermissionStore = create<PermissionState>((set, get) => ({
 
     void window.kvcode.replyPermission({ id: current.id, decision })
     set((state) => ({ queue: state.queue.slice(1) }))
+  },
+  denyAll: () => {
+    for (const request of get().queue) {
+      void window.kvcode.replyPermission({ id: request.id, decision: 'deny' })
+    }
+
+    set({ queue: [] })
   }
 }))
 

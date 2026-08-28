@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type { ChatEvent, ChatSettings } from '@shared/chat'
 import type { PermissionReply, PermissionRequest } from '@shared/permissions'
+import type { SessionEntry, SessionSummary } from '@shared/sessions'
 import type { ProviderId } from '@shared/providers'
 import { IpcChannel } from '@shared/ipc'
 import type { FileContent, FileNode, IpcResult, Workspace } from '@shared/types'
@@ -32,6 +33,11 @@ const api = {
   sendChat: (prompt: string) => unwrap<null>(IpcChannel.ChatSend, prompt),
   cancelChat: () => unwrap<null>(IpcChannel.ChatCancel),
   resetChat: () => unwrap<null>(IpcChannel.ChatReset),
+  listSessions: () => unwrap<SessionSummary[]>(IpcChannel.SessionList),
+  openSession: (id: string) => unwrap<SessionEntry[]>(IpcChannel.SessionOpen, id),
+  createSession: () => unwrap<null>(IpcChannel.SessionCreate),
+  deleteSession: (id: string) => unwrap<null>(IpcChannel.SessionDelete, id),
+  renameSession: (id: string, title: string) => unwrap<null>(IpcChannel.SessionRename, id, title),
   reportDirty: (paths: string[]) => unwrap<null>(IpcChannel.ReportDirty, paths),
   onChatEvent: (handler: (event: ChatEvent) => void) => {
     const listener = (_event: unknown, payload: ChatEvent) => handler(payload)

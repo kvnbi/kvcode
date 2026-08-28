@@ -1,7 +1,6 @@
 import type Anthropic from '@anthropic-ai/sdk'
 import type { ChatEvent } from '@shared/chat'
-import { appendEntry, currentSession, projectFor, startSession } from '../services/conversations'
-import { listRoots } from '../services/workspace'
+import { appendEntry, currentSession, openSession, startSession } from '../services/conversations'
 import { AGENT_TOOLS, WRITING_TOOLS, runTool } from './tools'
 import { createTransport } from './transport'
 
@@ -21,15 +20,15 @@ let controller: AbortController | null = null
 
 export function resetSession(): void {
   history.length = 0
-  startSession(listRoots()[0] ?? null)
+  startSession()
 }
 
-function ensureSession(): void {
-  const session = currentSession()
+export function loadSession(id: string): void {
+  history.length = 0
 
-  if (session.file && session.project === projectFor(listRoots()[0] ?? null)) return
-
-  resetSession()
+  for (const entry of openSession(id)) {
+    history.push({ role: entry.role, content: entry.content } as Anthropic.MessageParam)
+  }
 }
 
 export function cancelTurn(): void {
@@ -88,11 +87,12 @@ export async function runTurn(prompt: string, emit: (event: ChatEvent) => void):
   try {
     const active = createTransport()
 
-    ensureSession()
+    if (!currentSession()) startSession()
 
     controller = new AbortController()
     history.push({ role: 'user', content: prompt })
     record('user', prompt)
+    emit({ type: 'session', id: currentSession() })
 
     for (let step = 0; step < MAX_STEPS; step += 1) {
       const stream = active.transport.stream({

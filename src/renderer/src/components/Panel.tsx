@@ -5,10 +5,9 @@ interface PanelProps {
   title: string
   width?: number
   children?: ReactNode
-  footer?: ReactNode
 }
 
-export function Panel({ title, width, children, footer }: PanelProps) {
+export function Panel({ title, width, children }: PanelProps) {
   const isFlexible = width === undefined
 
   return (
@@ -18,7 +17,6 @@ export function Panel({ title, width, children, footer }: PanelProps) {
     >
       <div className={styles.header}>{title}</div>
       <div className={styles.body}>{children}</div>
-      {footer ? <div className={styles.footer}>{footer}</div> : null}
     </section>
   )
 }

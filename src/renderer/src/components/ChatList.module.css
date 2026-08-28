@@ -1,0 +1,133 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  width: 200px;
+  min-height: 0;
+  border-right: 1px solid var(--border-soft);
+}
+
+.newChat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  height: 30px;
+  margin: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-control);
+  corner-shape: var(--corner);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.newChat:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-height: 0;
+  padding: 0 8px 8px;
+  overflow: auto;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-row);
+  corner-shape: var(--corner);
+}
+
+.row:hover {
+  background-color: var(--surface-hover);
+}
+
+.rowOn {
+  background-color: var(--surface-active);
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row:hover .title,
+.rowOn .title {
+  color: var(--text-primary);
+}
+
+.rename {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-row);
+  corner-shape: var(--corner);
+  background-color: var(--surface-raised);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+}
+
+.rename:focus {
+  outline: none;
+}
+
+.remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  margin-right: 4px;
+  border-radius: var(--radius-row);
+  corner-shape: var(--corner);
+  color: var(--text-faint);
+  opacity: 0;
+}
+
+.row:hover .remove,
+.remove:focus-visible {
+  opacity: 1;
+}
+
+.remove:hover {
+  color: var(--text-primary);
+  background-color: var(--surface-active);
+}
+
+.settings {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  height: 32px;
+  margin: 0 8px 8px;
+  padding: 0 10px;
+  border-radius: var(--radius-row);
+  corner-shape: var(--corner);
+  color: var(--text-faint);
+  font-size: var(--text-sm);
+}
+
+.settings:hover {
+  color: var(--text-primary);
+  background-color: var(--surface-hover);
+}

@@ -1,50 +1,100 @@
-import { appendFileSync, chmodSync, existsSync, mkdirSync } from 'node:fs'
-import { createHash } from 'node:crypto'
-import { basename, join } from 'node:path'
-import { app } from 'electron'
+import { appendFileSync, chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { app, shell } from 'electron'
+import type { SessionEntry, SessionSummary } from '@shared/sessions'
 
-interface ConversationEntry {
-  role: 'user' | 'assistant'
-  content: unknown
-  at: string
-}
+const INDEX = 'index.json'
+const TITLE_LIMIT = 60
 
-let sessionId = ''
-let sessionFile = ''
-let sessionProject = ''
+let currentId = ''
 
-function projectKey(root: string | null): string {
-  if (!root) return 'no-project'
-
-  const digest = createHash('sha256').update(root).digest('hex').slice(0, 12)
-  return `${basename(root) || 'project'}-${digest}`
-}
-
-export function projectFor(root: string | null): string {
-  return projectKey(root)
-}
-
-export function startSession(root: string | null): string {
-  sessionProject = projectKey(root)
-
-  const directory = join(app.getPath('userData'), 'sessions', sessionProject)
+function root(): string {
+  const directory = join(app.getPath('userData'), 'sessions')
   mkdirSync(directory, { recursive: true, mode: 0o700 })
-
-  sessionId = new Date().toISOString().replace(/[:.]/g, '-')
-  sessionFile = join(directory, `${sessionId}.jsonl`)
-
-  return sessionId
+  return directory
 }
 
-export function appendEntry(entry: ConversationEntry): void {
-  if (!sessionFile) return
-
-  const isNew = !existsSync(sessionFile)
-  appendFileSync(sessionFile, `${JSON.stringify(entry)}\n`, { encoding: 'utf8', mode: 0o600 })
-
-  if (isNew) chmodSync(sessionFile, 0o600)
+function fileFor(id: string): string {
+  return join(root(), `${id}.jsonl`)
 }
 
-export function currentSession(): { id: string; file: string; project: string } {
-  return { id: sessionId, file: sessionFile, project: sessionProject }
+function readIndex(): SessionSummary[] {
+  try {
+    return JSON.parse(readFileSync(join(root(), INDEX), 'utf8')) as SessionSummary[]
+  } catch {
+    return []
+  }
+}
+
+function writeIndex(sessions: SessionSummary[]): void {
+  const target = join(root(), INDEX)
+  writeFileSync(target, JSON.stringify(sessions, null, 2), { encoding: 'utf8', mode: 0o600 })
+  chmodSync(target, 0o600)
+}
+
+function titleFrom(content: unknown): string {
+  const text = typeof content === 'string' ? content.trim() : ''
+  if (text.length === 0) return 'New chat'
+  return text.length > TITLE_LIMIT ? `${text.slice(0, TITLE_LIMIT)}...` : text
+}
+
+export function listSessions(): SessionSummary[] {
+  return readIndex().sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+}
+
+export function startSession(): string {
+  currentId = new Date().toISOString().replace(/[:.]/g, '-')
+  return currentId
+}
+
+export function currentSession(): string {
+  return currentId
+}
+
+export function readSession(id: string): SessionEntry[] {
+  if (!existsSync(fileFor(id))) return []
+
+  return readFileSync(fileFor(id), 'utf8')
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line) as SessionEntry)
+}
+
+export function openSession(id: string): SessionEntry[] {
+  currentId = id
+  return readSession(id)
+}
+
+export async function deleteSession(id: string): Promise<void> {
+  if (existsSync(fileFor(id))) await shell.trashItem(fileFor(id))
+
+  writeIndex(readIndex().filter((session) => session.id !== id))
+
+  if (currentId === id) currentId = ''
+}
+
+export function renameSession(id: string, title: string): void {
+  const trimmed = title.trim()
+  writeIndex(readIndex().map((s) => (s.id === id ? { ...s, title: trimmed || s.title } : s)))
+}
+
+export function appendEntry(entry: SessionEntry): void {
+  if (!currentId) return
+
+  const target = fileFor(currentId)
+  const isNew = !existsSync(target)
+
+  appendFileSync(target, `${JSON.stringify(entry)}\n`, { encoding: 'utf8', mode: 0o600 })
+  if (isNew) chmodSync(target, 0o600)
+
+  const sessions = readIndex()
+  const existing = sessions.find((session) => session.id === currentId)
+
+  if (existing) {
+    existing.updatedAt = entry.at
+  } else {
+    sessions.push({ id: currentId, title: titleFrom(entry.content), updatedAt: entry.at })
+  }
+
+  writeIndex(sessions)
 }

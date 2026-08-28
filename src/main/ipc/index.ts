@@ -2,10 +2,17 @@ import { BrowserWindow, dialog, ipcMain } from 'electron'
 import { IpcChannel } from '@shared/ipc'
 import type { ChatEvent, ChatSettings } from '@shared/chat'
 import type { PermissionReply } from '@shared/permissions'
+import type { SessionEntry, SessionSummary } from '@shared/sessions'
 import type { ProviderId } from '@shared/providers'
 import type { FileContent, FileNode, IpcResult, Workspace } from '@shared/types'
-import { cancelTurn, resetSession, runTurn } from '../agent/session'
+import { cancelTurn, loadSession, resetSession, runTurn } from '../agent/session'
 import { setDirtyPaths } from '../agent/tools'
+import {
+  deleteSession,
+  listSessions,
+  renameSession,
+  readSession
+} from '../services/conversations'
 import { settlePermission } from '../services/permissions'
 import { clearApiKey, secretsAvailable, storedProviders, writeApiKey } from '../services/secrets'
 import { readLayout, readPreferences, writeLayout, writePreferences } from '../services/settings'
@@ -111,6 +118,28 @@ export function registerIpcHandlers(): void {
 
   handle<null>(IpcChannel.ChatReset, async () => {
     resetSession()
+    return null
+  })
+
+  handle<SessionSummary[]>(IpcChannel.SessionList, async () => listSessions())
+
+  handle<SessionEntry[]>(IpcChannel.SessionOpen, async (id: string) => {
+    loadSession(id)
+    return readSession(id)
+  })
+
+  handle<null>(IpcChannel.SessionCreate, async () => {
+    resetSession()
+    return null
+  })
+
+  handle<null>(IpcChannel.SessionDelete, async (id: string) => {
+    await deleteSession(id)
+    return null
+  })
+
+  handle<null>(IpcChannel.SessionRename, async (id: string, title: string) => {
+    renameSession(id, title)
     return null
   })
 

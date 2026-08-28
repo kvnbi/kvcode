@@ -4,6 +4,7 @@ import { looksRisky } from '@shared/permissions'
 import type { PermissionRequest } from '@shared/permissions'
 import { useChatStore } from '@renderer/state/chatStore'
 import { usePermissionStore } from '@renderer/state/permissionStore'
+import { ChatList } from './ChatList'
 import { Panel } from './Panel'
 import styles from './PromptPanel.module.css'
 
@@ -73,7 +74,7 @@ function Composer({ blocked }: { blocked: boolean }) {
   )
 }
 
-export function PromptPanel({ width }: { width?: number }) {
+export function PromptPanel({ width, onOpenSettings }: { width?: number; onOpenSettings: () => void }) {
   const messages = useChatStore((state) => state.messages)
   const streaming = useChatStore((state) => state.streaming)
   const request = usePermissionStore((state) => state.queue[0])
@@ -84,24 +85,32 @@ export function PromptPanel({ width }: { width?: number }) {
   }, [messages, streaming])
 
   return (
-    <Panel
-      title="Prompt"
-      width={width}
-      footer={
-        <div className={styles.footer}>
-          {request ? <Request request={request} /> : null}
-          <Composer blocked={Boolean(request)} />
-        </div>
-      }
-    >
-      <div className={styles.thread}>
-        {messages.map((message) => (
-          <div key={message.id} className={`${styles.message} ${styles[message.role]}`}>
-            {message.text}
+    <Panel title="Prompt" width={width}>
+      <div className={styles.layout}>
+        <ChatList onOpenSettings={onOpenSettings} />
+        <div className={styles.main}>
+          {messages.length === 0 && !streaming ? (
+            <div className={styles.empty}>
+              <div className={styles.wordmark}>KVCODE</div>
+            </div>
+          ) : (
+            <div className={styles.thread}>
+              {messages.map((message) => (
+                <div key={message.id} className={`${styles.message} ${styles[message.role]}`}>
+                  {message.text}
+                </div>
+              ))}
+              {streaming ? (
+                <div className={`${styles.message} ${styles.assistant}`}>{streaming}</div>
+              ) : null}
+              <div ref={bottom} />
+            </div>
+          )}
+          <div className={styles.footer}>
+            {request ? <Request request={request} /> : null}
+            <Composer blocked={Boolean(request)} />
           </div>
-        ))}
-        {streaming ? <div className={`${styles.message} ${styles.assistant}`}>{streaming}</div> : null}
-        <div ref={bottom} />
+        </div>
       </div>
     </Panel>
   )

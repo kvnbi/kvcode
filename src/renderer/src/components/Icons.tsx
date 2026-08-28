@@ -58,3 +58,11 @@ export function GearIcon({ size = 14, className }: IconProps) {
     </svg>
   )
 }
+
+export function PlusIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M8 3.4v9.2M3.4 8h9.2" />
+    </svg>
+  )
+}

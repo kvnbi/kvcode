@@ -88,9 +88,12 @@ export function App() {
 
   return (
     <div className={styles.shell}>
-      <TitleBar onOpenSettings={() => setShowSettings(true)} />
+      <TitleBar />
       <div className={styles.body}>
-        <PromptPanel width={flexPosition === 0 ? undefined : fitted.chatWidth} />
+        <PromptPanel
+          width={flexPosition === 0 ? undefined : fitted.chatWidth}
+          onOpenSettings={() => setShowSettings(true)}
+        />
         {panels.map((id, index) => (
           <Fragment key={id}>
             <Divider label={`Resize ${TITLES[id]} panel`} onResize={(delta) => onDividerResize(index, delta)} />

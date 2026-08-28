@@ -1,8 +1,33 @@
+.layout {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+}
+
 .thread {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: 1;
+  min-width: 0;
   padding: 12px 14px;
+  overflow: auto;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.wordmark {
+  font-size: var(--text-xl);
+  font-weight: 650;
+  letter-spacing: var(--tracking-wordmark);
+  text-indent: var(--tracking-wordmark);
+  color: var(--text-brand);
 }
 
 .message {
@@ -34,10 +59,21 @@
   font-size: var(--text-sm);
 }
 
+.main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
 .footer {
   display: flex;
   flex-direction: column;
+  flex: none;
   gap: 8px;
+  padding: 8px;
+  border-top: 1px solid var(--border-soft);
 }
 
 .request {

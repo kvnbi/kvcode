@@ -51,6 +51,7 @@
   --text-xs: 11px;
   --text-sm: 12px;
   --text-md: 13px;
+  --text-xl: 30px;
   --text-lg: 14px;
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
