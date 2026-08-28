@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, Suspense, lazy, useEffect, useState } from 'react'
 import { useEditorStore } from '@renderer/state/editorStore'
 import { fitLayout, flexPanel, openPanels, useLayoutStore } from '@renderer/state/layoutStore'
 import type { PanelId } from '@renderer/state/layoutStore'
@@ -6,11 +6,14 @@ import { ChatList } from './ChatList'
 import { CodePanel } from './CodePanel'
 import { Divider } from './Divider'
 import { PromptPanel } from './PromptPanel'
-import { TerminalPanel } from './TerminalPanel'
 import { Settings } from './Settings'
 import { Panel } from './Panel'
 import { TitleBar } from './TitleBar'
 import styles from './App.module.css'
+
+const TerminalPanel = lazy(() =>
+  import('./TerminalPanel').then((module) => ({ default: module.TerminalPanel }))
+)
 
 const TITLES: Record<PanelId, string> = {
   code: 'Code',
@@ -99,7 +102,11 @@ export function App() {
             <Fragment key={id}>
               <Divider label={`Resize ${TITLES[id]} panel`} onResize={(delta) => onDividerResize(index, delta)} />
               {id === 'code' ? <CodePanel width={widthFor(id)} /> : null}
-              {id === 'terminal' ? <TerminalPanel width={widthFor(id)} /> : null}
+              {id === 'terminal' ? (
+                <Suspense fallback={null}>
+                  <TerminalPanel width={widthFor(id)} />
+                </Suspense>
+              ) : null}
               {id !== 'code' && id !== 'terminal' ? (
                 <Panel title={TITLES[id]} width={widthFor(id)} />
               ) : null}

@@ -117,7 +117,13 @@ export const useLayoutStore = create<LayoutState>()(
         getItem: () => window.kvcode.readLayout(),
         setItem: (_name, value) => queueWrite(value),
         removeItem: () => queueWrite('')
-      }))
+      })),
+      partialize: (state) => ({ chatWidth: state.chatWidth, widths: state.widths }),
+      merge: (persisted, current) => ({
+        ...current,
+        ...(persisted as Partial<LayoutState>),
+        open: current.open
+      })
     }
   )
 )

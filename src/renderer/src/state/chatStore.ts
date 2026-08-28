@@ -167,4 +167,5 @@ function onEvent(event: ChatEvent): void {
 }
 
 window.kvcode.onChatEvent(onEvent)
+void window.kvcode.resetChat()
 void useChatStore.getState().refreshSessions()
