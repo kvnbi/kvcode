@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 import type { ChatEvent, ChatSettings } from '@shared/chat'
 import type { PermissionReply, PermissionRequest } from '@shared/permissions'
 import type { SessionEntry, SessionSummary } from '@shared/sessions'
+import type { TerminalChunk, TerminalSnapshot } from '@shared/terminals'
 import type { ProviderId } from '@shared/providers'
 import { IpcChannel } from '@shared/ipc'
 import type { FileContent, FileNode, IpcResult, Workspace } from '@shared/types'
@@ -42,13 +43,37 @@ const api = {
   onChatEvent: (handler: (event: ChatEvent) => void) => {
     const listener = (_event: unknown, payload: ChatEvent) => handler(payload)
     ipcRenderer.on(IpcChannel.ChatEvent, listener)
-    return () => ipcRenderer.removeListener(IpcChannel.ChatEvent, listener)
+    return () => {
+      ipcRenderer.removeListener(IpcChannel.ChatEvent, listener)
+    }
+  },
+  openTerminals: () => unwrap<TerminalSnapshot[]>(IpcChannel.TerminalOpen),
+  createTerminal: () => unwrap<TerminalSnapshot>(IpcChannel.TerminalCreate),
+  writeTerminal: (id: string, data: string) => unwrap<null>(IpcChannel.TerminalWrite, id, data),
+  resizeTerminal: (id: string, cols: number, rows: number) =>
+    unwrap<null>(IpcChannel.TerminalResize, id, cols, rows),
+  closeTerminal: (id: string) => unwrap<null>(IpcChannel.TerminalClose, id),
+  onTerminalData: (handler: (chunk: TerminalChunk) => void) => {
+    const listener = (_event: unknown, payload: TerminalChunk) => handler(payload)
+    ipcRenderer.on(IpcChannel.TerminalData, listener)
+    return () => {
+      ipcRenderer.removeListener(IpcChannel.TerminalData, listener)
+    }
+  },
+  onTerminalExit: (handler: (id: string) => void) => {
+    const listener = (_event: unknown, payload: { id: string }) => handler(payload.id)
+    ipcRenderer.on(IpcChannel.TerminalExit, listener)
+    return () => {
+      ipcRenderer.removeListener(IpcChannel.TerminalExit, listener)
+    }
   },
   replyPermission: (reply: PermissionReply) => unwrap<null>(IpcChannel.PermissionReply, reply),
   onPermissionRequest: (handler: (request: PermissionRequest) => void) => {
     const listener = (_event: unknown, payload: PermissionRequest) => handler(payload)
     ipcRenderer.on(IpcChannel.PermissionRequest, listener)
-    return () => ipcRenderer.removeListener(IpcChannel.PermissionRequest, listener)
+    return () => {
+      ipcRenderer.removeListener(IpcChannel.PermissionRequest, listener)
+    }
   }
 }
 

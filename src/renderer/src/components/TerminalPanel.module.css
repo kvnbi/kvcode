@@ -1,0 +1,109 @@
+.panel {
+  composes: panel from './Panel.module.css';
+}
+
+.flexible {
+  composes: flexible from './Panel.module.css';
+}
+
+.header {
+  composes: header from './Panel.module.css';
+  gap: 4px;
+  padding: 0 6px 0 8px;
+}
+
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  flex: none;
+  height: 24px;
+  padding-right: 2px;
+  border-radius: var(--radius-row);
+  corner-shape: var(--corner);
+  color: var(--text-faint);
+}
+
+.tab:hover:not(.tabOn) {
+  color: var(--text-primary);
+  background-color: var(--surface-hover);
+}
+
+.tabOn {
+  color: var(--text-primary);
+  background-color: var(--surface-selected);
+}
+
+.tabName {
+  height: 24px;
+  padding: 0 8px;
+  color: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.tabClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border-radius: var(--radius-row);
+  corner-shape: var(--corner);
+  color: inherit;
+  opacity: 0;
+}
+
+.tab:hover .tabClose,
+.tabClose:focus-visible {
+  opacity: 1;
+}
+
+.tabClose:hover {
+  background-color: var(--surface-active);
+}
+
+.add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: var(--radius-row);
+  corner-shape: var(--corner);
+  color: var(--text-faint);
+}
+
+.add:hover {
+  color: var(--text-primary);
+  background-color: var(--surface-hover);
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  padding: 10px 12px;
+  background-color: var(--surface-terminal);
+}
+
+.surface {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.surface :global(.xterm-viewport) {
+  scrollbar-width: thin;
+}

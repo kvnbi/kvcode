@@ -3,6 +3,7 @@
   --surface-panel: rgba(34, 34, 34, 0.55);
   --surface-panel-solid: rgb(30, 30, 30);
   --surface-sidebar: var(--kv-ink-850);
+  --surface-terminal: #000000;
   --surface-editor: rgba(22, 22, 22, 0.6);
   --surface-header: rgba(255, 255, 255, 0.025);
   --surface-raised: rgba(255, 255, 255, 0.055);
@@ -42,6 +43,7 @@
 
   --font-ui: "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-code: var(--font-ui);
+  --font-mono: Menlo, "SF Mono", Monaco, ui-monospace, monospace;
   --tracking-wordmark: 0.2em;
 
   --control-height: 32px;

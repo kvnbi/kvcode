@@ -21,5 +21,12 @@ export const IpcChannel = {
   ChatEvent: 'chat:event',
   ReportDirty: 'buffers:dirty',
   PermissionRequest: 'permission:request',
-  PermissionReply: 'permission:reply'
+  PermissionReply: 'permission:reply',
+  TerminalOpen: 'terminal:open',
+  TerminalCreate: 'terminal:create',
+  TerminalWrite: 'terminal:write',
+  TerminalResize: 'terminal:resize',
+  TerminalClose: 'terminal:close',
+  TerminalData: 'terminal:data',
+  TerminalExit: 'terminal:exit'
 } as const

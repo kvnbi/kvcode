@@ -3,6 +3,7 @@ import { IpcChannel } from '@shared/ipc'
 import type { ChatEvent, ChatSettings } from '@shared/chat'
 import type { PermissionReply } from '@shared/permissions'
 import type { SessionEntry, SessionSummary } from '@shared/sessions'
+import type { TerminalSnapshot } from '@shared/terminals'
 import type { ProviderId } from '@shared/providers'
 import type { FileContent, FileNode, IpcResult, Workspace } from '@shared/types'
 import { cancelTurn, loadSession, resetSession, runTurn } from '../agent/session'
@@ -14,6 +15,13 @@ import {
   readSession
 } from '../services/conversations'
 import { settlePermission } from '../services/permissions'
+import {
+  closeTerminal,
+  createTerminal,
+  openTerminals,
+  resizeTerminal,
+  writeTerminal
+} from '../services/terminals'
 import { clearApiKey, secretsAvailable, storedProviders, writeApiKey } from '../services/secrets'
 import { readLayout, readPreferences, writeLayout, writePreferences } from '../services/settings'
 import {
@@ -140,6 +148,25 @@ export function registerIpcHandlers(): void {
 
   handle<null>(IpcChannel.SessionRename, async (id: string, title: string) => {
     renameSession(id, title)
+    return null
+  })
+
+  handle<TerminalSnapshot[]>(IpcChannel.TerminalOpen, async () => openTerminals())
+
+  handle<TerminalSnapshot>(IpcChannel.TerminalCreate, async () => createTerminal())
+
+  handle<null>(IpcChannel.TerminalWrite, async (id: string, data: string) => {
+    writeTerminal(id, data)
+    return null
+  })
+
+  handle<null>(IpcChannel.TerminalResize, async (id: string, cols: number, rows: number) => {
+    resizeTerminal(id, cols, rows)
+    return null
+  })
+
+  handle<null>(IpcChannel.TerminalClose, async (id: string) => {
+    closeTerminal(id)
     return null
   })
 

@@ -6,6 +6,7 @@ import { ChatList } from './ChatList'
 import { CodePanel } from './CodePanel'
 import { Divider } from './Divider'
 import { PromptPanel } from './PromptPanel'
+import { TerminalPanel } from './TerminalPanel'
 import { Settings } from './Settings'
 import { Panel } from './Panel'
 import { TitleBar } from './TitleBar'
@@ -97,11 +98,11 @@ export function App() {
           {panels.map((id, index) => (
             <Fragment key={id}>
               <Divider label={`Resize ${TITLES[id]} panel`} onResize={(delta) => onDividerResize(index, delta)} />
-              {id === 'code' ? (
-                <CodePanel width={widthFor(id)} />
-              ) : (
+              {id === 'code' ? <CodePanel width={widthFor(id)} /> : null}
+              {id === 'terminal' ? <TerminalPanel width={widthFor(id)} /> : null}
+              {id !== 'code' && id !== 'terminal' ? (
                 <Panel title={TITLES[id]} width={widthFor(id)} />
-              )}
+              ) : null}
             </Fragment>
           ))}
         </div>
