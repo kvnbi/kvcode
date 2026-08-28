@@ -13,5 +13,8 @@ export const IpcChannel = {
   ChatSend: 'chat:send',
   ChatCancel: 'chat:cancel',
   ChatReset: 'chat:reset',
-  ChatEvent: 'chat:event'
+  ChatEvent: 'chat:event',
+  ReportDirty: 'buffers:dirty',
+  PermissionRequest: 'permission:request',
+  PermissionReply: 'permission:reply'
 } as const

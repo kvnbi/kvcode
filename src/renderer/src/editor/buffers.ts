@@ -49,6 +49,23 @@ export function isBufferDirty(path: string): boolean {
   return buffer.model.getValue() !== buffer.savedText
 }
 
+export function applyExternalWrite(path: string, text: string): boolean {
+  const buffer = buffers.get(path)
+
+  if (!buffer) return false
+
+  const model = buffer.model
+
+  if (model.getValue() !== text) {
+    model.pushEditOperations([], [{ range: model.getFullModelRange(), text }], () => null)
+  }
+
+  buffer.savedText = model.getValue()
+  buffer.savedVersionId = model.getAlternativeVersionId()
+
+  return true
+}
+
 export function markSaved(path: string): void {
   const buffer = buffers.get(path)
 

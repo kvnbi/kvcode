@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type { ChatEvent, ChatSettings } from '@shared/chat'
+import type { PermissionReply, PermissionRequest } from '@shared/permissions'
 import type { ProviderId } from '@shared/providers'
 import { IpcChannel } from '@shared/ipc'
 import type { FileContent, FileNode, IpcResult, Workspace } from '@shared/types'
@@ -31,10 +32,17 @@ const api = {
   sendChat: (prompt: string) => unwrap<null>(IpcChannel.ChatSend, prompt),
   cancelChat: () => unwrap<null>(IpcChannel.ChatCancel),
   resetChat: () => unwrap<null>(IpcChannel.ChatReset),
+  reportDirty: (paths: string[]) => unwrap<null>(IpcChannel.ReportDirty, paths),
   onChatEvent: (handler: (event: ChatEvent) => void) => {
     const listener = (_event: unknown, payload: ChatEvent) => handler(payload)
     ipcRenderer.on(IpcChannel.ChatEvent, listener)
     return () => ipcRenderer.removeListener(IpcChannel.ChatEvent, listener)
+  },
+  replyPermission: (reply: PermissionReply) => unwrap<null>(IpcChannel.PermissionReply, reply),
+  onPermissionRequest: (handler: (request: PermissionRequest) => void) => {
+    const listener = (_event: unknown, payload: PermissionRequest) => handler(payload)
+    ipcRenderer.on(IpcChannel.PermissionRequest, listener)
+    return () => ipcRenderer.removeListener(IpcChannel.PermissionRequest, listener)
   }
 }
 

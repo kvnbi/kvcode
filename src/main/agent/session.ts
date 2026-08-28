@@ -2,7 +2,8 @@ import type Anthropic from '@anthropic-ai/sdk'
 import type { ChatEvent } from '@shared/chat'
 import { appendEntry, currentSession, projectFor, startSession } from '../services/conversations'
 import { listRoots } from '../services/workspace'
-import { AGENT_TOOLS, runTool } from './tools'
+import { beginCheckpoint } from '../services/checkpoints'
+import { AGENT_TOOLS, WRITING_TOOLS, runTool } from './tools'
 import { createTransport } from './transport'
 
 const MAX_TOKENS = 64000
@@ -12,7 +13,7 @@ const SYSTEM = [
   'You are the coding assistant inside kvcode, a desktop editor.',
   'Answer questions about the code in the folders the user has opened.',
   'Use list_files and read_file to look at real code before answering.',
-  'You cannot write to disk. When a change is needed, explain it and show the proposed code in a fenced block.'
+  'Edit existing files with edit_file, replacing only the lines that change. Use write_file only for new files.'
 ].join(' ')
 
 const history: Anthropic.MessageParam[] = []
@@ -63,6 +64,12 @@ async function resolveCalls(
         tool_use_id: call.id,
         content: await runTool(call.name, call.input)
       })
+
+      if (WRITING_TOOLS.has(call.name)) {
+        const written = (call.input as { path?: string }).path
+
+        if (written) emit({ type: 'file', path: written })
+      }
     } catch (error) {
       results.push({
         type: 'tool_result',
@@ -85,6 +92,7 @@ export async function runTurn(prompt: string, emit: (event: ChatEvent) => void):
     ensureSession()
 
     controller = new AbortController()
+    beginCheckpoint()
     history.push({ role: 'user', content: prompt })
     record('user', prompt)
 

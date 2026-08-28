@@ -1,9 +1,12 @@
 import { BrowserWindow, dialog, ipcMain } from 'electron'
 import { IpcChannel } from '@shared/ipc'
 import type { ChatEvent, ChatSettings } from '@shared/chat'
+import type { PermissionReply } from '@shared/permissions'
 import type { ProviderId } from '@shared/providers'
 import type { FileContent, FileNode, IpcResult, Workspace } from '@shared/types'
 import { cancelTurn, resetSession, runTurn } from '../agent/session'
+import { setDirtyPaths } from '../agent/tools'
+import { settlePermission } from '../services/permissions'
 import { clearApiKey, secretsAvailable, storedProviders, writeApiKey } from '../services/secrets'
 import { readLayout, readPreferences, writeLayout, writePreferences } from '../services/settings'
 import {
@@ -96,6 +99,16 @@ export function registerIpcHandlers(): void {
   handle<ChatSettings>(IpcChannel.ClearApiKey, async (provider: ProviderId) => {
     clearApiKey(provider)
     return settings()
+  })
+
+  handle<null>(IpcChannel.ReportDirty, async (paths: string[]) => {
+    setDirtyPaths(paths)
+    return null
+  })
+
+  handle<null>(IpcChannel.PermissionReply, async (reply: PermissionReply) => {
+    settlePermission(reply)
+    return null
   })
 
   handle<null>(IpcChannel.ChatReset, async () => {

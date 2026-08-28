@@ -80,22 +80,24 @@ export function Settings({ onClose }: { onClose: () => void }) {
                 className={styles.input}
                 type="password"
                 value={keyDraft}
+                disabled={hasKey}
                 placeholder={hasKey ? 'Key stored' : 'Paste a key'}
                 onChange={(event) => setKeyDraft(event.target.value)}
               />
-              <button
-                type="button"
-                className={styles.action}
-                disabled={keyDraft.trim().length === 0}
-                onClick={saveKey}
-              >
-                Save
-              </button>
               {hasKey ? (
                 <button type="button" className={styles.action} onClick={removeKey}>
                   Remove
                 </button>
-              ) : null}
+              ) : (
+                <button
+                  type="button"
+                  className={styles.action}
+                  disabled={keyDraft.trim().length === 0}
+                  onClick={saveKey}
+                >
+                  Save
+                </button>
+              )}
             </div>
           </div>
         </div>

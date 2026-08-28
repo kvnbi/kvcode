@@ -85,6 +85,11 @@
   font-size: var(--text-md);
 }
 
+.input:disabled {
+  color: var(--text-faint);
+  cursor: default;
+}
+
 .input:focus {
   outline: none;
   border-color: var(--border-strong);

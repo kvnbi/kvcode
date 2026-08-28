@@ -15,6 +15,7 @@ interface EditorState {
   toggleDirectory: (path: string) => Promise<void>
   openFile: (path: string) => Promise<void>
   setDirty: (path: string, value: boolean) => void
+  refreshFile: (path: string) => Promise<void>
   save: () => Promise<void>
 }
 
@@ -144,9 +145,28 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   setDirty: (path, value) => {
-    set((state) =>
-      Boolean(state.dirty[path]) === value ? state : { dirty: { ...state.dirty, [path]: value } }
-    )
+    set((state) => {
+      if (Boolean(state.dirty[path]) === value) return state
+
+      const dirty = { ...state.dirty, [path]: value }
+      void window.kvcode.reportDirty(Object.keys(dirty).filter((key) => dirty[key]))
+
+      return { dirty }
+    })
+  },
+
+  refreshFile: async (path) => {
+    try {
+      const file = await window.kvcode.readFile(path)
+      const { applyExternalWrite, hasBuffer, openBuffer } = await import('@renderer/editor/buffers')
+
+      if (hasBuffer(path)) applyExternalWrite(path, file.text)
+      else openBuffer(path, file.text)
+
+      get().setDirty(path, false)
+    } catch (error) {
+      fail(error)
+    }
   },
 
   save: async () => {

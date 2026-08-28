@@ -4,6 +4,7 @@ export type ChatEvent =
   | { type: 'start' }
   | { type: 'text'; delta: string }
   | { type: 'tool'; name: string; detail: string }
+  | { type: 'file'; path: string }
   | { type: 'message'; text: string }
   | { type: 'done' }
   | { type: 'error'; message: string }

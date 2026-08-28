@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { ChatEvent } from '@shared/chat'
+import { useEditorStore } from './editorStore'
 
 interface ChatMessage {
   id: string
@@ -62,6 +63,11 @@ function onEvent(event: ChatEvent): void {
   if (event.type === 'tool') {
     useChatStore.setState({ streaming: '' })
     append('tool', `${event.name} ${event.detail}`)
+    return
+  }
+
+  if (event.type === 'file') {
+    void useEditorStore.getState().refreshFile(event.path)
     return
   }
 

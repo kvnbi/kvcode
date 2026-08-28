@@ -4,6 +4,7 @@ import { fitLayout, flexPanel, openPanels, useLayoutStore } from '@renderer/stat
 import type { PanelId } from '@renderer/state/layoutStore'
 import { CodePanel } from './CodePanel'
 import { Divider } from './Divider'
+import { PermissionPrompt } from './PermissionPrompt'
 import { PromptPanel } from './PromptPanel'
 import { Settings } from './Settings'
 import { Panel } from './Panel'
@@ -103,6 +104,7 @@ export function App() {
         ))}
       </div>
       {showSettings ? <Settings onClose={() => setShowSettings(false)} /> : null}
+      <PermissionPrompt />
     </div>
   )
 }

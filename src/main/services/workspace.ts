@@ -1,6 +1,7 @@
-import { readdir, readFile, writeFile, stat, realpath } from 'node:fs/promises'
-import { basename, join, resolve, sep } from 'node:path'
+import { readdir, readFile, rename, writeFile, stat, realpath } from 'node:fs/promises'
+import { basename, dirname, join, resolve, sep } from 'node:path'
 import type { FileContent, FileNode, Workspace } from '@shared/types'
+import { isPathGranted, requestPermission } from './permissions'
 
 const MAX_FILE_BYTES = 8 * 1024 * 1024
 const BINARY_SNIFF_BYTES = 4096
@@ -28,20 +29,41 @@ export function unregisterWorkspace(directory: string): void {
   allowedRoots.delete(resolve(directory))
 }
 
-function assertAllowed(target: string): string {
-  const candidate = resolve(target)
-
+function insideRoots(target: string): boolean {
   for (const root of allowedRoots) {
-    if (candidate === root || candidate.startsWith(root + sep)) {
-      return candidate
-    }
+    if (target === root || target.startsWith(root + sep)) return true
   }
 
-  throw new Error('Path is outside of the open workspace')
+  return false
+}
+
+async function realTarget(path: string): Promise<string> {
+  const candidate = resolve(path)
+
+  try {
+    return await realpath(candidate)
+  } catch {
+    const parent = await realpath(dirname(candidate))
+    return join(parent, basename(candidate))
+  }
+}
+
+async function authorize(path: string, kind: 'read' | 'write'): Promise<string> {
+  const target = await realTarget(path)
+
+  if (insideRoots(target) || isPathGranted(target)) return target
+
+  const granted = await requestPermission(kind, target, dirname(target))
+
+  if (!granted) {
+    throw new Error('The user did not allow access to this path')
+  }
+
+  return target
 }
 
 export async function readDirectory(directory: string): Promise<FileNode[]> {
-  const target = assertAllowed(directory)
+  const target = await authorize(directory, 'read')
   const entries = await readdir(target, { withFileTypes: true })
 
   return entries
@@ -68,7 +90,7 @@ function looksBinary(buffer: Buffer): boolean {
 }
 
 export async function readTextFile(path: string): Promise<FileContent> {
-  const target = assertAllowed(path)
+  const target = await authorize(path, 'read')
   const info = await stat(target)
 
   if (!info.isFile()) {
@@ -89,6 +111,19 @@ export async function readTextFile(path: string): Promise<FileContent> {
 }
 
 export async function writeTextFile(path: string, text: string): Promise<void> {
-  const target = assertAllowed(path)
-  await writeFile(target, text, 'utf8')
+  const target = await authorize(path, 'write')
+
+  if (Buffer.byteLength(text, 'utf8') > MAX_FILE_BYTES) {
+    throw new Error('The new content is too large to write')
+  }
+
+  const existing = await stat(target).catch(() => null)
+
+  if (existing && !existing.isFile()) {
+    throw new Error('Path is not a file')
+  }
+
+  const temporary = `${target}.kvcode-${process.pid}`
+  await writeFile(temporary, text, 'utf8')
+  await rename(temporary, target)
 }
