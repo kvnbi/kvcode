@@ -3,14 +3,10 @@
   align-items: center;
   gap: var(--space-3);
   height: var(--titlebar-height);
-  padding: 0 12px;
+  padding: 0 12px 0 16px;
+  border-bottom: 1px solid var(--border-default);
   -webkit-app-region: drag;
   user-select: none;
-}
-
-.macSpacer {
-  width: 68px;
-  flex: none;
 }
 
 .brand {
@@ -30,7 +26,7 @@
   margin-left: auto;
   padding: 3px;
   border: 1px solid var(--border-soft);
-  border-radius: var(--radius-control);
+  border-radius: calc(var(--radius-row) + 3px);
   corner-shape: var(--corner);
   background-color: var(--surface-raised);
   -webkit-app-region: no-drag;

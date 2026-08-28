@@ -2,6 +2,7 @@
   --surface-window: rgba(26, 26, 26, 0.82);
   --surface-panel: rgba(34, 34, 34, 0.55);
   --surface-panel-solid: rgb(30, 30, 30);
+  --surface-sidebar: var(--kv-ink-850);
   --surface-editor: rgba(22, 22, 22, 0.6);
   --surface-header: rgba(255, 255, 255, 0.025);
   --surface-raised: rgba(255, 255, 255, 0.055);
@@ -23,20 +24,17 @@
   --text-on-accent: var(--kv-ink-850);
   --accent-ring: rgba(255, 255, 255, 0.32);
   --state-neutral: var(--kv-silver-200);
+  --surface-selected: var(--kv-ink-400);
 
   --scrollbar-thumb: rgba(255, 255, 255, 0.08);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.16);
   --selection: rgba(255, 255, 255, 0.22);
 
-  --edge-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.07);
-
-  --glass-blur: 26px;
-
   --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.5);
 
-  --radius-row: 7px;
-  --radius-control: 9px;
-  --radius-panel: 12px;
+  --radius-row: 10px;
+  --radius-control: 16px;
+  --radius-panel: 22px;
   --radius-round: 999px;
   --corner: squircle;
 
@@ -60,4 +58,5 @@
 
   --titlebar-height: 52px;
   --sidebar-width: 268px;
+  --chat-width: 200px;
 }

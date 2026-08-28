@@ -10,8 +10,12 @@
 }
 
 .dialog {
-  composes: panel from './parts.module.css';
   display: flex;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-panel);
+  corner-shape: var(--corner);
+  box-shadow: var(--shadow-lg);
   flex-direction: column;
   width: 960px;
   max-width: 100%;
@@ -84,7 +88,7 @@
 
 .tabOn {
   color: var(--text-primary);
-  background-color: var(--surface-active);
+  background-color: var(--surface-selected);
 }
 
 .content {

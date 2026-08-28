@@ -26,6 +26,8 @@ export function ChatList({ onOpenSettings }: { onOpenSettings: () => void }) {
 
   return (
     <div className={styles.list}>
+      {window.kvcode.platform === 'darwin' ? <div className={styles.drag} /> : null}
+
       <button type="button" className={styles.newChat} onClick={() => void newSession()}>
         <PlusIcon size={13} />
         New chat

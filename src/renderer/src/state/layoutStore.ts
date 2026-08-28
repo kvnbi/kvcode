@@ -13,8 +13,8 @@ const CHAT_MAX = 560
 const PANEL_MIN = 220
 const PANEL_MAX = 720
 const FLEX_MIN = 440
-const DIVIDER = 10
-const PADDING = 20
+const DIVIDER = 1
+const SIDEBAR = 200
 
 interface LayoutState {
   chatWidth: number
@@ -52,7 +52,7 @@ export function fitLayout(
   const slack = (value: number, min: number) => Math.max(0, value - min)
 
   const used = chatWidth + fixed.reduce((total, id) => total + widths[id], 0)
-  const available = viewport - panels.length * DIVIDER - PADDING - FLEX_MIN
+  const available = viewport - SIDEBAR - panels.length * DIVIDER - FLEX_MIN
 
   if (used <= available) return { chatWidth, widths }
 

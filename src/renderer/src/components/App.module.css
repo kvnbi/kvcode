@@ -1,14 +1,19 @@
 .shell {
+  display: flex;
+  height: 100%;
+  background-color: var(--surface-window);
+}
+
+.content {
   display: grid;
   grid-template-rows: var(--titlebar-height) minmax(0, 1fr);
   grid-template-columns: minmax(0, 1fr);
-  height: 100%;
-  background-color: var(--surface-window);
+  flex: 1;
+  min-width: 0;
 }
 
 .body {
   display: flex;
   min-height: 0;
   overflow: hidden;
-  padding: 0 10px 10px;
 }

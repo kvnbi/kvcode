@@ -1,6 +1,6 @@
 .sidebar {
-  composes: panel from './parts.module.css';
   display: flex;
+  overflow: hidden;
   flex-direction: column;
   width: var(--sidebar-width);
   flex: 0 1 auto;

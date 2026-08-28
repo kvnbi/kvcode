@@ -27,9 +27,8 @@
 }
 
 .row.active {
-  background: var(--surface-active);
+  background: var(--surface-selected);
   color: var(--text-primary);
-  box-shadow: inset 0 0 0 1px var(--border-strong), var(--edge-highlight);
 }
 
 .chevron {

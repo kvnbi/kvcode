@@ -2,7 +2,6 @@
   display: flex;
   flex: none;
   min-height: 0;
-  gap: 10px;
 }
 
 .flexible {
@@ -11,10 +10,11 @@
 }
 
 .editor {
-  composes: panel from './parts.module.css';
   display: flex;
+  overflow: hidden;
   flex: 1;
   flex-direction: column;
   min-width: 260px;
+  border-left: 1px solid var(--border-default);
   background-color: var(--surface-editor);
 }

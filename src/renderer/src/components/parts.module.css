@@ -1,12 +1,3 @@
-.panel {
-  overflow: hidden;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-panel);
-  corner-shape: var(--corner);
-  box-shadow: var(--shadow-lg), var(--edge-highlight);
-  backdrop-filter: blur(var(--glass-blur)) saturate(115%);
-}
-
 .chevron {
   flex: none;
   color: var(--text-faint);

@@ -2,6 +2,7 @@ import { Fragment, useEffect, useState } from 'react'
 import { useEditorStore } from '@renderer/state/editorStore'
 import { fitLayout, flexPanel, openPanels, useLayoutStore } from '@renderer/state/layoutStore'
 import type { PanelId } from '@renderer/state/layoutStore'
+import { ChatList } from './ChatList'
 import { CodePanel } from './CodePanel'
 import { Divider } from './Divider'
 import { PromptPanel } from './PromptPanel'
@@ -88,22 +89,22 @@ export function App() {
 
   return (
     <div className={styles.shell}>
-      <TitleBar />
-      <div className={styles.body}>
-        <PromptPanel
-          width={flexPosition === 0 ? undefined : fitted.chatWidth}
-          onOpenSettings={() => setShowSettings(true)}
-        />
-        {panels.map((id, index) => (
-          <Fragment key={id}>
-            <Divider label={`Resize ${TITLES[id]} panel`} onResize={(delta) => onDividerResize(index, delta)} />
-            {id === 'code' ? (
-              <CodePanel width={widthFor(id)} />
-            ) : (
-              <Panel title={TITLES[id]} width={widthFor(id)} />
-            )}
-          </Fragment>
-        ))}
+      <ChatList onOpenSettings={() => setShowSettings(true)} />
+      <div className={styles.content}>
+        <TitleBar />
+        <div className={styles.body}>
+          <PromptPanel width={flexPosition === 0 ? undefined : fitted.chatWidth} />
+          {panels.map((id, index) => (
+            <Fragment key={id}>
+              <Divider label={`Resize ${TITLES[id]} panel`} onResize={(delta) => onDividerResize(index, delta)} />
+              {id === 'code' ? (
+                <CodePanel width={widthFor(id)} />
+              ) : (
+                <Panel title={TITLES[id]} width={widthFor(id)} />
+              )}
+            </Fragment>
+          ))}
+        </div>
       </div>
       {showSettings ? <Settings onClose={() => setShowSettings(false)} /> : null}
     </div>

@@ -13,12 +13,9 @@ const LABELS: Record<PanelId, string> = {
 export function TitleBar() {
   const open = useLayoutStore((state) => state.open)
   const togglePanel = useLayoutStore((state) => state.togglePanel)
-  const isMac = window.kvcode.platform === 'darwin'
 
   return (
     <header className={styles.bar}>
-      {isMac ? <div className={styles.macSpacer} /> : null}
-
       <div className={styles.brand}>KVCODE</div>
 
       <div className={styles.toggles}>
