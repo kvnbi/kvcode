@@ -2,7 +2,6 @@ import type Anthropic from '@anthropic-ai/sdk'
 import type { ChatEvent } from '@shared/chat'
 import { appendEntry, currentSession, projectFor, startSession } from '../services/conversations'
 import { listRoots } from '../services/workspace'
-import { beginCheckpoint } from '../services/checkpoints'
 import { AGENT_TOOLS, WRITING_TOOLS, runTool } from './tools'
 import { createTransport } from './transport'
 
@@ -92,7 +91,6 @@ export async function runTurn(prompt: string, emit: (event: ChatEvent) => void):
     ensureSession()
 
     controller = new AbortController()
-    beginCheckpoint()
     history.push({ role: 'user', content: prompt })
     record('user', prompt)
 

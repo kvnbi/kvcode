@@ -1,7 +1,6 @@
 import { spawn } from 'node:child_process'
 import { homedir } from 'node:os'
 import type Anthropic from '@anthropic-ai/sdk'
-import { captureFile } from '../services/checkpoints'
 import { commandsGranted, requestPermission } from '../services/permissions'
 import { listRoots, readDirectory, readTextFile, writeTextFile } from '../services/workspace'
 
@@ -143,7 +142,6 @@ export async function runTool(name: string, input: unknown): Promise<string> {
       throw new Error('old_text appears more than once. Include more surrounding lines to make it unique.')
     }
 
-    await captureFile(path)
     await writeTextFile(path, text.slice(0, at) + newText + text.slice(at + oldText.length))
 
     return `Edited ${path}`
@@ -154,7 +152,6 @@ export async function runTool(name: string, input: unknown): Promise<string> {
     const content = required(input, 'content', 'write_file')
 
     assertWritable(path)
-    await captureFile(path)
     await writeTextFile(path, content)
 
     return `Wrote ${path}`
