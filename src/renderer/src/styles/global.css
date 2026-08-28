@@ -55,7 +55,7 @@ button {
   background: var(--scrollbar-thumb);
   border: 3px solid transparent;
   background-clip: content-box;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-round);
 }
 
 ::-webkit-scrollbar-thumb:hover {

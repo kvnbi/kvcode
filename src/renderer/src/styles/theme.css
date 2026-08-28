@@ -18,6 +18,9 @@
   --text-accent: var(--kv-silver-300);
   --text-brand: var(--kv-silver-100);
 
+  --accent: var(--kv-silver-300);
+  --accent-hover: var(--kv-silver-100);
+  --text-on-accent: var(--kv-ink-850);
   --accent-ring: rgba(255, 255, 255, 0.32);
   --state-neutral: var(--kv-silver-200);
 

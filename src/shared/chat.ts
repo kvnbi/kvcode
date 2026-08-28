@@ -12,7 +12,6 @@ export type ChatEvent =
 export interface ChatSettings {
   mode: 'direct' | 'proxy'
   provider: ProviderId
-  baseUrl: string
   storedKeys: ProviderId[]
   keychainAvailable: boolean
 }

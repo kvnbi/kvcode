@@ -51,14 +51,12 @@ interface Preferences {
   mode: 'direct' | 'proxy'
   provider: ProviderId
   models: Record<ProviderId, string>
-  baseUrl: string
 }
 
 const DEFAULT_PREFERENCES: Preferences = {
   mode: 'direct',
   provider: 'anthropic',
-  models: { ...PROVIDER_MODELS },
-  baseUrl: ''
+  models: { ...PROVIDER_MODELS }
 }
 
 export function readPreferences(): Preferences {

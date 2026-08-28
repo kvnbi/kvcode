@@ -1,10 +1,45 @@
 import { useEffect, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
+import { looksRisky } from '@shared/permissions'
+import type { PermissionRequest } from '@shared/permissions'
 import { useChatStore } from '@renderer/state/chatStore'
+import { usePermissionStore } from '@renderer/state/permissionStore'
 import { Panel } from './Panel'
 import styles from './PromptPanel.module.css'
 
-function Composer() {
+const TITLES: Record<PermissionRequest['kind'], string> = {
+  read: 'Read a file outside your open folders',
+  write: 'Write a file outside your open folders',
+  command: 'Run a command on your computer'
+}
+
+function Request({ request }: { request: PermissionRequest }) {
+  const decide = usePermissionStore((state) => state.decide)
+
+  return (
+    <div className={styles.request}>
+      <div className={styles.requestTitle}>{TITLES[request.kind]}</div>
+      <div className={styles.requestDetail}>{request.detail}</div>
+      {request.cwd ? <div className={styles.requestCwd}>in {request.cwd}</div> : null}
+      {looksRisky(request.detail) ? (
+        <div className={styles.requestWarning}>This can change things outside this project.</div>
+      ) : null}
+      <div className={styles.requestActions}>
+        <button type="button" className={styles.choice} onClick={() => decide('deny')}>
+          Deny
+        </button>
+        <button type="button" className={styles.choice} onClick={() => decide('session')}>
+          Allow for the session
+        </button>
+        <button type="button" className={styles.allow} onClick={() => decide('once')}>
+          Allow once
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function Composer({ blocked }: { blocked: boolean }) {
   const [draft, setDraft] = useState('')
   const isRunning = useChatStore((state) => state.isRunning)
   const send = useChatStore((state) => state.send)
@@ -30,6 +65,7 @@ function Composer() {
       className={styles.input}
       value={draft}
       rows={2}
+      disabled={blocked}
       placeholder={isRunning ? 'Enter to stop' : 'Message'}
       onChange={(event) => setDraft(event.target.value)}
       onKeyDown={onKeyDown}
@@ -40,6 +76,7 @@ function Composer() {
 export function PromptPanel({ width }: { width?: number }) {
   const messages = useChatStore((state) => state.messages)
   const streaming = useChatStore((state) => state.streaming)
+  const request = usePermissionStore((state) => state.queue[0])
   const bottom = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -47,7 +84,16 @@ export function PromptPanel({ width }: { width?: number }) {
   }, [messages, streaming])
 
   return (
-    <Panel title="Prompt" width={width} footer={<Composer />}>
+    <Panel
+      title="Prompt"
+      width={width}
+      footer={
+        <div className={styles.footer}>
+          {request ? <Request request={request} /> : null}
+          <Composer blocked={Boolean(request)} />
+        </div>
+      }
+    >
       <div className={styles.thread}>
         {messages.map((message) => (
           <div key={message.id} className={`${styles.message} ${styles[message.role]}`}>

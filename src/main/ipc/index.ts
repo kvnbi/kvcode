@@ -37,7 +37,6 @@ function settings(): ChatSettings {
   return {
     mode: preferences.mode,
     provider: preferences.provider,
-    baseUrl: preferences.baseUrl,
     storedKeys: storedProviders(),
     keychainAvailable: secretsAvailable()
   }
@@ -85,7 +84,6 @@ export function registerIpcHandlers(): void {
 
     if (next.mode) patch.mode = next.mode
     if (next.provider) patch.provider = next.provider
-    if (typeof next.baseUrl === 'string') patch.baseUrl = next.baseUrl
 
     writePreferences(patch)
     return settings()

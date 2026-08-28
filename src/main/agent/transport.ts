@@ -46,21 +46,18 @@ export function createTransport(): ActiveModel {
   const provider = preferences.provider
   const apiKey = readApiKey(provider)
   const model = preferences.models[provider]
+  const override = process.env.KVCODE_BASE_URL ?? ''
 
   if (!apiKey) {
     throw new Error(`No API key is set for ${provider}. Add one in Settings.`)
   }
 
   if (provider === 'anthropic') {
-    return { transport: createDirectTransport(apiKey, preferences.baseUrl), model }
+    return { transport: createDirectTransport(apiKey, override), model }
   }
 
   return {
-    transport: createOpenAiTransport(
-      apiKey,
-      preferences.baseUrl || BASE_URLS[provider],
-      provider === 'openai'
-    ),
+    transport: createOpenAiTransport(apiKey, override || BASE_URLS[provider], provider === 'openai'),
     model
   }
 }
