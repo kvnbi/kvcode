@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process'
 import { homedir } from 'node:os'
 import type Anthropic from '@anthropic-ai/sdk'
 import { commandsGranted, requestPermission } from '../services/permissions'
+import { findFiles, searchText } from '../services/search'
 import { listRoots, readDirectory, readTextFile, writeTextFile } from '../services/workspace'
 
 const COMMAND_TIMEOUT = 120000
@@ -20,6 +21,33 @@ export const AGENT_TOOLS: Anthropic.Tool[] = [
         path: { type: 'string', description: 'Absolute path of the directory to list' }
       },
       required: []
+    }
+  },
+  {
+    name: 'find_files',
+    description:
+      'Find files by name using a glob pattern, for example src/**/*.tsx or package.json. A pattern without a slash matches the file name at any depth. Prefer this over listing directories one by one.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        pattern: { type: 'string', description: 'Glob pattern to match' },
+        path: { type: 'string', description: 'Directory to search in, defaults to the open folders' }
+      },
+      required: ['pattern']
+    }
+  },
+  {
+    name: 'search_text',
+    description:
+      'Search file contents with a regular expression and return matching lines as path:line: text. This is the fastest way to find where something is defined or used. Prefer it over reading whole files.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        pattern: { type: 'string', description: 'Regular expression to search for' },
+        path: { type: 'string', description: 'Directory to search in, defaults to the open folders' },
+        glob: { type: 'string', description: 'Only search files matching this glob pattern' }
+      },
+      required: ['pattern']
     }
   },
   {
@@ -117,6 +145,18 @@ export async function runTool(name: string, input: unknown): Promise<string> {
     return entries
       .map((entry) => `${entry.kind === 'directory' ? 'dir ' : 'file'} ${entry.path}`)
       .join('\n')
+  }
+
+  if (name === 'find_files') {
+    return findFiles(required(input, 'pattern', 'find_files'), field(input, 'path'))
+  }
+
+  if (name === 'search_text') {
+    return searchText(
+      required(input, 'pattern', 'search_text'),
+      field(input, 'path'),
+      field(input, 'glob')
+    )
   }
 
   if (name === 'read_file') {

@@ -21,6 +21,10 @@ export async function registerWorkspace(directory: string): Promise<Workspace> {
   return { name: basename(root) || root, path: root }
 }
 
+export async function authorizeRead(path: string): Promise<string> {
+  return authorize(path, 'read')
+}
+
 export function listRoots(): string[] {
   return [...allowedRoots]
 }
