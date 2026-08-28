@@ -5,9 +5,12 @@ import type { ProviderId } from '@shared/providers'
 import { CloseIcon } from './Icons'
 import styles from './Settings.module.css'
 
+const SECTIONS = [{ id: 'models', label: 'Models' }]
+
 export function Settings({ onClose }: { onClose: () => void }) {
   const [settings, setSettings] = useState<ChatSettings | null>(null)
   const [keyDraft, setKeyDraft] = useState('')
+  const [section, setSection] = useState(SECTIONS[0].id)
 
   useEffect(() => {
     void window.kvcode.readSettings().then(setSettings)
@@ -57,47 +60,62 @@ export function Settings({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className={styles.body}>
-          <div className={styles.field}>
-            <div className={styles.label}>Provider</div>
-            <div className={styles.row}>
-              {PROVIDERS.map((id) => (
-                <button
-                  key={id}
-                  type="button"
-                  className={id === provider ? `${styles.choice} ${styles.choiceOn}` : styles.choice}
-                  onClick={() => selectProvider(id)}
-                >
-                  {PROVIDER_LABELS[id]}
-                </button>
-              ))}
-            </div>
+          <div className={styles.sidebar}>
+            {SECTIONS.map((entry) => (
+              <button
+                key={entry.id}
+                type="button"
+                className={entry.id === section ? `${styles.tab} ${styles.tabOn}` : styles.tab}
+                onClick={() => setSection(entry.id)}
+              >
+                {entry.label}
+              </button>
+            ))}
           </div>
 
-          <div className={styles.field}>
-            <div className={styles.label}>API key</div>
-            <div className={styles.row}>
-              <input
-                className={styles.input}
-                type="password"
-                value={keyDraft}
-                disabled={hasKey}
-                placeholder={hasKey ? 'Key stored' : 'Paste a key'}
-                onChange={(event) => setKeyDraft(event.target.value)}
-              />
-              {hasKey ? (
-                <button type="button" className={styles.action} onClick={removeKey}>
-                  Remove
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className={styles.action}
-                  disabled={keyDraft.trim().length === 0}
-                  onClick={saveKey}
-                >
-                  Save
-                </button>
-              )}
+          <div className={styles.content}>
+            <div className={styles.field}>
+              <div className={styles.label}>Provider</div>
+              <div className={styles.row}>
+                {PROVIDERS.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={id === provider ? `${styles.choice} ${styles.choiceOn}` : styles.choice}
+                    onClick={() => selectProvider(id)}
+                  >
+                    {PROVIDER_LABELS[id]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className={styles.field}>
+              <div className={styles.label}>API key</div>
+              <div className={styles.row}>
+                <input
+                  className={styles.input}
+                  type="password"
+                  value={keyDraft}
+                  disabled={hasKey}
+                  placeholder={hasKey ? 'Key stored' : 'Paste a key'}
+                  onChange={(event) => setKeyDraft(event.target.value)}
+                />
+                {hasKey ? (
+                  <button type="button" className={styles.action} onClick={removeKey}>
+                    Remove
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className={styles.action}
+                    disabled={keyDraft.trim().length === 0}
+                    onClick={saveKey}
+                  >
+                    Save
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
