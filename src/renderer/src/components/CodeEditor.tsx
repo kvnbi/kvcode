@@ -9,7 +9,7 @@ const FALLBACK_FONT = '"Inter Variable", "Inter", system-ui, sans-serif'
 
 const EDITOR_OPTIONS: editor.IStandaloneEditorConstructionOptions = {
   automaticLayout: true,
-  fontSize: 13,
+  fontSize: 14,
   lineHeight: 1.7,
   letterSpacing: 0,
   fontLigatures: false,

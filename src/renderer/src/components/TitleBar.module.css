@@ -33,7 +33,7 @@
 }
 
 .toggle {
-  height: 24px;
+  height: 26px;
   padding: 0 12px;
   border-radius: var(--radius-row);
   corner-shape: var(--corner);

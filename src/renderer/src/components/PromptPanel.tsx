@@ -3,7 +3,9 @@ import type { KeyboardEvent } from 'react'
 import { looksRisky } from '@shared/permissions'
 import type { PermissionRequest } from '@shared/permissions'
 import { useChatStore } from '@renderer/state/chatStore'
+import type { ChatMessage } from '@renderer/state/chatStore'
 import { usePermissionStore } from '@renderer/state/permissionStore'
+import { Markdown } from './Markdown'
 import { Panel } from './Panel'
 import styles from './PromptPanel.module.css'
 
@@ -37,6 +39,27 @@ function Request({ request }: { request: PermissionRequest }) {
       </div>
     </div>
   )
+}
+
+function Message({ message }: { message: ChatMessage }) {
+  if (message.role === 'user') {
+    return <div className={styles.user}>{message.text}</div>
+  }
+
+  if (message.role === 'tool') {
+    return (
+      <div className={styles.tool}>
+        <span className={styles.toolName}>{message.tool}</span>
+        <span className={styles.toolArgs}>{message.text}</span>
+      </div>
+    )
+  }
+
+  if (message.role === 'error') {
+    return <div className={styles.error}>{message.text}</div>
+  }
+
+  return <Markdown text={message.text} />
 }
 
 function Composer({ blocked }: { blocked: boolean }) {
@@ -76,6 +99,10 @@ function Composer({ blocked }: { blocked: boolean }) {
 export function PromptPanel({ width }: { width?: number }) {
   const messages = useChatStore((state) => state.messages)
   const streaming = useChatStore((state) => state.streaming)
+  const isRunning = useChatStore((state) => state.isRunning)
+  const title = useChatStore(
+    (state) => state.sessions.find((session) => session.id === state.activeId)?.title ?? 'New chat'
+  )
   const request = usePermissionStore((state) => state.queue[0])
   const bottom = useRef<HTMLDivElement>(null)
 
@@ -84,7 +111,7 @@ export function PromptPanel({ width }: { width?: number }) {
   }, [messages, streaming])
 
   return (
-    <Panel title="Prompt" width={width}>
+    <Panel title={title} width={width}>
       <div className={styles.main}>
         {messages.length === 0 && !streaming ? (
           <div className={styles.empty}>
@@ -93,13 +120,10 @@ export function PromptPanel({ width }: { width?: number }) {
         ) : (
           <div className={styles.thread}>
             {messages.map((message) => (
-              <div key={message.id} className={`${styles.message} ${styles[message.role]}`}>
-                {message.text}
-              </div>
+              <Message key={message.id} message={message} />
             ))}
-            {streaming ? (
-              <div className={`${styles.message} ${styles.assistant}`}>{streaming}</div>
-            ) : null}
+            {streaming ? <Markdown text={streaming} /> : null}
+            {isRunning && !streaming ? <div className={styles.working}>Working</div> : null}
             <div ref={bottom} />
           </div>
         )}

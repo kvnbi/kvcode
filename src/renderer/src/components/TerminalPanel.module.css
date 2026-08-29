@@ -25,7 +25,7 @@
   display: flex;
   align-items: center;
   flex: none;
-  height: 24px;
+  height: 26px;
   padding-right: 2px;
   border-radius: var(--radius-row);
   corner-shape: var(--corner);
@@ -43,7 +43,7 @@
 }
 
 .tabName {
-  height: 24px;
+  height: 26px;
   padding: 0 8px;
   color: inherit;
   font-size: var(--text-sm);

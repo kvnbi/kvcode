@@ -15,8 +15,8 @@
   --border-strong: rgba(255, 255, 255, 0.16);
 
   --text-primary: var(--kv-ink-0);
-  --text-secondary: var(--kv-ink-100);
-  --text-faint: var(--kv-ink-300);
+  --text-secondary: var(--kv-ink-50);
+  --text-faint: var(--kv-ink-100);
   --text-accent: var(--kv-silver-300);
   --text-brand: var(--kv-silver-100);
 
@@ -48,11 +48,11 @@
 
   --control-height: 32px;
 
-  --text-xs: 11px;
-  --text-sm: 12px;
-  --text-md: 13px;
-  --text-xl: 30px;
-  --text-lg: 14px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-md: 14px;
+  --text-xl: 32px;
+  --text-lg: 15px;
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --duration-fast: 120ms;

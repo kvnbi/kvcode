@@ -30,7 +30,7 @@ export function openSlot(id: string, container: HTMLElement): Slot {
   const term = new Terminal({
     cursorBlink: true,
     fontFamily: fontFamily(),
-    fontSize: 12,
+    fontSize: 13,
     lineHeight: 1.35,
     scrollback: 10000,
     theme: TERMINAL_THEME

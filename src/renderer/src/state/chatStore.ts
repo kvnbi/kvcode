@@ -4,10 +4,11 @@ import type { SessionEntry, SessionSummary } from '@shared/sessions'
 import { useEditorStore } from './editorStore'
 import { usePermissionStore } from './permissionStore'
 
-interface ChatMessage {
+export interface ChatMessage {
   id: string
   role: 'user' | 'assistant' | 'tool' | 'error'
   text: string
+  tool?: string
 }
 
 interface ChatState {
@@ -32,9 +33,9 @@ function nextId(): string {
   return `m${counter}`
 }
 
-function append(role: ChatMessage['role'], text: string) {
+function append(role: ChatMessage['role'], text: string, tool?: string) {
   useChatStore.setState((state) => ({
-    messages: [...state.messages, { id: nextId(), role, text }]
+    messages: [...state.messages, { id: nextId(), role, text, tool }]
   }))
 }
 
@@ -55,7 +56,7 @@ function toMessages(entries: SessionEntry[]): ChatMessage[] {
       }
 
       if (block.type === 'tool_use') {
-        messages.push({ id: nextId(), role: 'tool', text: `${block.name} ${JSON.stringify(block.input)}` })
+        messages.push({ id: nextId(), role: 'tool', text: JSON.stringify(block.input), tool: block.name })
       }
     }
   }
@@ -140,7 +141,7 @@ function onEvent(event: ChatEvent): void {
 
   if (event.type === 'tool') {
     useChatStore.setState({ streaming: '' })
-    append('tool', `${event.name} ${event.detail}`)
+    append('tool', event.detail, event.name)
     return
   }
 
