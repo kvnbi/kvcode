@@ -1,4 +1,5 @@
 import { readdir, readFile, stat } from 'node:fs/promises'
+import { homedir } from 'node:os'
 import { basename, join, relative } from 'node:path'
 import { authorizeRead, listRoots } from './workspace'
 
@@ -24,9 +25,7 @@ const MAX_MATCHES = 100
 const MAX_LINE = 200
 const MAX_BYTES = 1024 * 1024
 
-function escape(value: string): string {
-  return value.replace(/[.+^${}()|[\]\\]/g, '\\$&')
-}
+const SPECIAL = new Set('.+^${}()|[]\\')
 
 function globToRegExp(pattern: string): RegExp {
   let source = ''
@@ -46,7 +45,12 @@ function globToRegExp(pattern: string): RegExp {
       continue
     }
 
-    source += character === '?' ? '[^/]' : escape(character)
+    if (character === '?') {
+      source += '[^/]'
+      continue
+    }
+
+    source += SPECIAL.has(character) ? `\\${character}` : character
   }
 
   return new RegExp(`^${source}$`)
@@ -61,10 +65,13 @@ function matcher(pattern: string): (path: string, root: string) => boolean {
 
 async function* walk(root: string): AsyncGenerator<[string, string]> {
   const queue = [root]
+  let head = 0
   let seen = 0
 
-  while (queue.length > 0) {
-    const directory = queue.shift() as string
+  while (head < queue.length) {
+    const directory = queue[head]
+    head += 1
+
     let entries
 
     try {
@@ -101,7 +108,11 @@ async function* walkAll(path: string | null): AsyncGenerator<[string, string]> {
 
   const open = listRoots()
 
-  if (open.length === 0) throw new Error('No folders are open.')
+  if (open.length === 0) {
+    throw new Error(
+      `No folders are open. Pass an absolute path to search anywhere on this computer, for example ${homedir()}. The user will be asked to approve it.`
+    )
+  }
 
   for (const root of open) yield* walk(root)
 }

@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process'
 import { homedir } from 'node:os'
 import type Anthropic from '@anthropic-ai/sdk'
+import { cleanEnvironment } from '../services/environment'
 import { commandsGranted, requestPermission } from '../services/permissions'
 import { findFiles, searchText } from '../services/search'
 import { listRoots, readDirectory, readTextFile, writeTextFile } from '../services/workspace'
@@ -14,7 +15,7 @@ export const AGENT_TOOLS: Anthropic.Tool[] = [
   {
     name: 'list_files',
     description:
-      'List the files and directories inside an open folder. Omit path to list the open folders themselves. Only paths inside folders the user has opened are readable.',
+      'List the files and directories at a path. Omit path to list the folders the user has opened. Any absolute path on this computer works, and the user is asked to approve paths outside the open folders.',
     input_schema: {
       type: 'object',
       properties: {
@@ -31,7 +32,7 @@ export const AGENT_TOOLS: Anthropic.Tool[] = [
       type: 'object',
       properties: {
         pattern: { type: 'string', description: 'Glob pattern to match' },
-        path: { type: 'string', description: 'Directory to search in, defaults to the open folders' }
+        path: { type: 'string', description: 'Absolute directory to search in, defaults to the open folders' }
       },
       required: ['pattern']
     }
@@ -44,7 +45,7 @@ export const AGENT_TOOLS: Anthropic.Tool[] = [
       type: 'object',
       properties: {
         pattern: { type: 'string', description: 'Regular expression to search for' },
-        path: { type: 'string', description: 'Directory to search in, defaults to the open folders' },
+        path: { type: 'string', description: 'Absolute directory to search in, defaults to the open folders' },
         glob: { type: 'string', description: 'Only search files matching this glob pattern' }
       },
       required: ['pattern']
@@ -53,7 +54,7 @@ export const AGENT_TOOLS: Anthropic.Tool[] = [
   {
     name: 'read_file',
     description:
-      'Read the full text of a file inside an open folder. Use list_files first if you do not know the exact path.',
+      'Read the full text of a file. Any absolute path on this computer works, and the user is asked to approve paths outside the open folders.',
     input_schema: {
       type: 'object',
       properties: {
@@ -92,7 +93,7 @@ export const AGENT_TOOLS: Anthropic.Tool[] = [
   {
     name: 'run_command',
     description:
-      'Run a shell command and return its output and exit code. Use it to run tests, builds, git and other tools. The user is asked to approve commands. Prefer running from a folder the user has open.',
+      'Run a shell command and return its output and exit code. Use it to run tests, builds, git and other tools. The user is asked to approve commands.',
     input_schema: {
       type: 'object',
       properties: {
@@ -138,7 +139,10 @@ export async function runTool(name: string, input: unknown): Promise<string> {
 
     if (!path) {
       const roots = listRoots()
-      return roots.length > 0 ? roots.join('\n') : 'No folders are open.'
+
+      if (roots.length > 0) return roots.join('\n')
+
+      return `No folders are open. Pass an absolute path to look anywhere on this computer, for example ${homedir()}. The user will be asked to approve it.`
     }
 
     const entries = await readDirectory(path)
@@ -215,7 +219,7 @@ export async function runTool(name: string, input: unknown): Promise<string> {
 
 function runCommand(command: string, cwd: string): Promise<string> {
   return new Promise((resolve) => {
-    const child = spawn(command, { shell: true, cwd, env: process.env })
+    const child = spawn(command, { shell: true, cwd, env: cleanEnvironment() })
     const chunks: string[] = []
     let length = 0
 

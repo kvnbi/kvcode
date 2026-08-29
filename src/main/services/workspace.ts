@@ -1,5 +1,7 @@
 import { readdir, readFile, rename, writeFile, stat, realpath } from 'node:fs/promises'
 import { basename, dirname, join, resolve, sep } from 'node:path'
+import { BrowserWindow } from 'electron'
+import { IpcChannel } from '@shared/ipc'
 import type { FileContent, FileNode, Workspace } from '@shared/types'
 import { isPathGranted, requestPermission } from './permissions'
 
@@ -52,23 +54,60 @@ async function realTarget(path: string): Promise<string> {
   }
 }
 
+function accessError(error: unknown, path: string): Error {
+  const code = (error as NodeJS.ErrnoException).code
+
+  if (code === 'EPERM' || code === 'EACCES') {
+    return new Error(
+      `macOS blocked access to ${path}. Grant access in System Settings, Privacy and Security, Files and Folders, then try again.`
+    )
+  }
+
+  return error instanceof Error ? error : new Error(String(error))
+}
+
+async function adoptDirectory(target: string): Promise<void> {
+  if (allowedRoots.has(target)) return
+
+  try {
+    if (!(await stat(target)).isDirectory()) return
+  } catch {
+    return
+  }
+
+  const workspace = await registerWorkspace(target)
+  const window = BrowserWindow.getAllWindows()[0]
+
+  if (window && !window.isDestroyed()) {
+    window.webContents.send(IpcChannel.WorkspaceOpened, workspace)
+  }
+}
+
 async function authorize(path: string, kind: 'read' | 'write'): Promise<string> {
   const target = await realTarget(path)
 
   if (insideRoots(target) || isPathGranted(target)) return target
 
-  const granted = await requestPermission(kind, target, dirname(target))
+  const granted = await requestPermission(kind, target, target)
 
   if (!granted) {
     throw new Error('The user did not allow access to this path')
   }
+
+  if (isPathGranted(target)) await adoptDirectory(target)
 
   return target
 }
 
 export async function readDirectory(directory: string): Promise<FileNode[]> {
   const target = await authorize(directory, 'read')
-  const entries = await readdir(target, { withFileTypes: true })
+  let entries
+
+  try {
+    entries = await readdir(target, { withFileTypes: true })
+  } catch (error) {
+    throw accessError(error, target)
+  }
 
   return entries
     .filter((entry) => entry.isFile() || entry.isDirectory())
@@ -95,7 +134,13 @@ function looksBinary(buffer: Buffer): boolean {
 
 export async function readTextFile(path: string): Promise<FileContent> {
   const target = await authorize(path, 'read')
-  const info = await stat(target)
+  let info
+
+  try {
+    info = await stat(target)
+  } catch (error) {
+    throw accessError(error, target)
+  }
 
   if (!info.isFile()) {
     throw new Error('Path is not a file')
@@ -105,7 +150,14 @@ export async function readTextFile(path: string): Promise<FileContent> {
     throw new Error('File is too large to open')
   }
 
-  const buffer = await readFile(target)
+  let buffer
+
+  try {
+    buffer = await readFile(target)
+  } catch (error) {
+    throw accessError(error, target)
+  }
+
 
   if (looksBinary(buffer)) {
     throw new Error('File appears to be binary')

@@ -1,3 +1,4 @@
+import { homedir } from 'node:os'
 import type Anthropic from '@anthropic-ai/sdk'
 import type { ChatEvent } from '@shared/chat'
 import { appendEntry, currentSession, openSession, startSession } from '../services/conversations'
@@ -5,12 +6,14 @@ import { AGENT_TOOLS, WRITING_TOOLS, runTool } from './tools'
 import { createTransport } from './transport'
 
 const MAX_TOKENS = 64000
-const MAX_STEPS = 12
+const MAX_STEPS = 40
 
 const SYSTEM = [
   'You are the coding assistant inside kvcode, a desktop editor.',
-  'Answer questions about the code in the folders the user has opened.',
-  'Use list_files and read_file to look at real code before answering.',
+  `You can reach any file or folder on this computer. The home directory is ${homedir()}.`,
+  'Paths outside the folders the user has opened are allowed, and the user is asked to approve them.',
+  'Never refuse because no folder is open. Resolve the location the user named to an absolute path and use it.',
+  'Use find_files and search_text to locate code, and read_file before answering.',
   'Edit existing files with edit_file, replacing only the lines that change. Use write_file only for new files.'
 ].join(' ')
 

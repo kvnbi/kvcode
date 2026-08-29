@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { isUnder } from '@renderer/lib/path'
+import { useLayoutStore } from '@renderer/state/layoutStore'
 import type { FileNode, Workspace } from '@shared/types'
 
 interface EditorState {
@@ -11,6 +12,7 @@ interface EditorState {
   dirty: Record<string, boolean>
   isSaving: boolean
   openFolders: () => Promise<void>
+  addWorkspaces: (opened: Workspace[]) => Promise<void>
   closeFolder: (root: string) => Promise<void>
   toggleDirectory: (path: string) => Promise<void>
   openFile: (path: string) => Promise<void>
@@ -44,30 +46,33 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   openFolders: async () => {
     try {
-      const opened = await window.kvcode.openFolders()
-      const open = new Set(get().workspaces.map((workspace) => workspace.path))
-      const added = opened.filter((workspace) => !open.has(workspace.path))
-
-      if (added.length === 0) return
-
-      const listings = await Promise.all(
-        added.map((workspace) => window.kvcode.readDirectory(workspace.path))
-      )
-
-      set((state) => {
-        const entries = { ...state.entries }
-        const expanded = { ...state.expanded }
-
-        added.forEach((workspace, index) => {
-          entries[workspace.path] = listings[index]
-          expanded[workspace.path] = true
-        })
-
-        return { workspaces: [...state.workspaces, ...added], entries, expanded }
-      })
+      await get().addWorkspaces(await window.kvcode.openFolders())
     } catch (error) {
       fail(error)
     }
+  },
+
+  addWorkspaces: async (opened) => {
+    const open = new Set(get().workspaces.map((workspace) => workspace.path))
+    const added = opened.filter((workspace) => !open.has(workspace.path))
+
+    if (added.length === 0) return
+
+    const listings = await Promise.all(
+      added.map((workspace) => window.kvcode.readDirectory(workspace.path))
+    )
+
+    set((state) => {
+      const entries = { ...state.entries }
+      const expanded = { ...state.expanded }
+
+      added.forEach((workspace, index) => {
+        entries[workspace.path] = listings[index]
+        expanded[workspace.path] = true
+      })
+
+      return { workspaces: [...state.workspaces, ...added], entries, expanded }
+    })
   },
 
   closeFolder: async (root) => {
@@ -196,3 +201,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 export function selectIsDirty(state: EditorState): boolean {
   return state.activePath !== null && Boolean(state.dirty[state.activePath])
 }
+
+window.kvcode.onWorkspaceOpened((workspace) => {
+  useLayoutStore.getState().openPanel('code')
+  void useEditorStore.getState().addWorkspaces([workspace])
+})

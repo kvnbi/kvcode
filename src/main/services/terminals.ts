@@ -3,6 +3,7 @@ import { BrowserWindow } from 'electron'
 import { spawn } from 'node-pty'
 import type { IPty } from 'node-pty'
 import { IpcChannel } from '@shared/ipc'
+import { cleanEnvironment } from './environment'
 import type { TerminalSnapshot } from '@shared/terminals'
 import { listRoots } from './workspace'
 
@@ -25,41 +26,13 @@ function shellPath(): string {
   return process.env.SHELL ?? '/bin/zsh'
 }
 
-const INHERITED = new Set([
-  'HOME',
-  'LANG',
-  'LOGNAME',
-  'PATH',
-  'SHELL',
-  'SSH_AUTH_SOCK',
-  'TMPDIR',
-  'TZ',
-  'USER',
-  '__CF_USER_TEXT_ENCODING'
-])
-
-function cleanPath(value: string): string {
-  return value
-    .split(':')
-    .filter((entry) => !entry.includes('/node_modules/.bin'))
-    .join(':')
-}
-
-function environment(): Record<string, string> {
-  const result: Record<string, string> = {}
-
-  for (const [key, value] of Object.entries(process.env)) {
-    if (typeof value !== 'string') continue
-    if (INHERITED.has(key) || key.startsWith('LC_')) result[key] = value
+function terminalEnvironment(): Record<string, string> {
+  return {
+    ...cleanEnvironment(),
+    TERM: 'xterm-256color',
+    COLORTERM: 'truecolor',
+    TERM_PROGRAM: 'kvcode'
   }
-
-  if (result.PATH) result.PATH = cleanPath(result.PATH)
-
-  result.TERM = 'xterm-256color'
-  result.COLORTERM = 'truecolor'
-  result.TERM_PROGRAM = 'kvcode'
-
-  return result
 }
 
 function emit(channel: string, payload: unknown): void {
@@ -77,7 +50,7 @@ export function createTerminal(): TerminalSnapshot {
     cols: COLS,
     rows: ROWS,
     cwd: listRoots()[0] ?? homedir(),
-    env: environment()
+    env: terminalEnvironment()
   })
 
   const session: Session = { pty, buffer: '' }

@@ -21,6 +21,7 @@ interface LayoutState {
   widths: Widths
   open: Open
   togglePanel: (id: PanelId) => void
+  openPanel: (id: PanelId) => void
   resizeChat: (delta: number) => void
   resizePanel: (id: PanelId, delta: number) => void
 }
@@ -104,6 +105,7 @@ export const useLayoutStore = create<LayoutState>()(
       widths: { code: 700, diff: 360, output: 360, browser: 440, terminal: 360 },
       open: { code: false, diff: false, output: false, browser: false, terminal: false },
       togglePanel: (id) => set((state) => ({ open: { ...state.open, [id]: !state.open[id] } })),
+      openPanel: (id) => set((state) => ({ open: { ...state.open, [id]: true } })),
       resizeChat: (delta) =>
         set((state) => ({ chatWidth: clamp(state.chatWidth + delta, CHAT_MIN, CHAT_MAX) })),
       resizePanel: (id, delta) =>

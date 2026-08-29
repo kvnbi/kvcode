@@ -21,6 +21,13 @@ const api = {
   platform: process.platform,
   openFolders: () => unwrap<Workspace[]>(IpcChannel.OpenFolders),
   closeFolder: (path: string) => unwrap<null>(IpcChannel.CloseFolder, path),
+  onWorkspaceOpened: (handler: (workspace: Workspace) => void) => {
+    const listener = (_event: unknown, payload: Workspace) => handler(payload)
+    ipcRenderer.on(IpcChannel.WorkspaceOpened, listener)
+    return () => {
+      ipcRenderer.removeListener(IpcChannel.WorkspaceOpened, listener)
+    }
+  },
   readDirectory: (path: string) => unwrap<FileNode[]>(IpcChannel.ReadDirectory, path),
   readFile: (path: string) => unwrap<FileContent>(IpcChannel.ReadFile, path),
   writeFile: (path: string, text: string) => unwrap<null>(IpcChannel.WriteFile, path, text),

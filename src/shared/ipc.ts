@@ -1,6 +1,7 @@
 export const IpcChannel = {
   OpenFolders: 'folders:open',
   CloseFolder: 'folders:close',
+  WorkspaceOpened: 'folders:opened',
   ReadDirectory: 'folders:read-directory',
   ReadFile: 'file:read',
   WriteFile: 'file:write',
