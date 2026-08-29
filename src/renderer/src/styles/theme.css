@@ -1,22 +1,22 @@
 :root {
-  --surface-window: rgba(26, 26, 26, 0.82);
-  --surface-panel: rgba(34, 34, 34, 0.55);
-  --surface-panel-solid: rgb(30, 30, 30);
-  --surface-sidebar: var(--kv-ink-850);
+  --surface-window: rgba(17, 17, 17, 0.9);
+  --surface-panel: rgba(22, 22, 22, 0.62);
+  --surface-panel-solid: rgb(22, 22, 22);
+  --surface-sidebar: var(--kv-ink-800);
   --surface-terminal: #000000;
-  --surface-editor: rgba(22, 22, 22, 0.6);
-  --surface-header: rgba(255, 255, 255, 0.025);
-  --surface-raised: rgba(255, 255, 255, 0.055);
-  --surface-hover: rgba(255, 255, 255, 0.05);
-  --surface-active: rgba(255, 255, 255, 0.1);
+  --surface-editor: rgba(14, 14, 14, 0.66);
+  --surface-header: rgba(255, 255, 255, 0.03);
+  --surface-raised: rgba(255, 255, 255, 0.07);
+  --surface-hover: rgba(255, 255, 255, 0.065);
+  --surface-active: rgba(255, 255, 255, 0.12);
 
   --border-soft: rgba(255, 255, 255, 0.06);
   --border-default: rgba(255, 255, 255, 0.09);
   --border-strong: rgba(255, 255, 255, 0.16);
 
-  --text-primary: var(--kv-ink-0);
-  --text-secondary: var(--kv-ink-50);
-  --text-faint: var(--kv-ink-100);
+  --text-primary: var(--kv-silver-100);
+  --text-secondary: var(--kv-silver-200);
+  --text-faint: var(--kv-silver-400);
   --text-accent: var(--kv-silver-300);
   --text-brand: var(--kv-silver-100);
 

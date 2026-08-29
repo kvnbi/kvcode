@@ -62,11 +62,28 @@ function Message({ message }: { message: ChatMessage }) {
   return <Markdown text={message.text} />
 }
 
+const MAX_COMPOSER_HEIGHT = 168
+
 function Composer({ blocked }: { blocked: boolean }) {
+  const area = useRef<HTMLTextAreaElement>(null)
   const [draft, setDraft] = useState('')
   const isRunning = useChatStore((state) => state.isRunning)
   const send = useChatStore((state) => state.send)
   const cancel = useChatStore((state) => state.cancel)
+
+  useEffect(() => {
+    const node = area.current
+
+    if (!node) return
+
+    node.style.height = '0px'
+
+    const border = node.offsetHeight - node.clientHeight
+    const height = Math.min(node.scrollHeight + border, MAX_COMPOSER_HEIGHT)
+
+    node.style.height = `${height}px`
+    node.style.overflowY = height < MAX_COMPOSER_HEIGHT ? 'hidden' : 'auto'
+  }, [draft])
 
   function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key !== 'Enter' || event.shiftKey) return
@@ -85,9 +102,10 @@ function Composer({ blocked }: { blocked: boolean }) {
 
   return (
     <textarea
+      ref={area}
       className={styles.input}
       value={draft}
-      rows={2}
+      rows={1}
       disabled={blocked}
       placeholder={isRunning ? 'Enter to stop' : 'Message'}
       onChange={(event) => setDraft(event.target.value)}
