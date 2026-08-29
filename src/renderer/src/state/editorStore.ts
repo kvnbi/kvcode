@@ -5,6 +5,7 @@ import type { FileNode, Workspace } from '@shared/types'
 
 interface EditorState {
   workspaces: Workspace[]
+  openPaths: string[]
   entries: Record<string, FileNode[]>
   expanded: Record<string, boolean>
   pending: Record<string, boolean>
@@ -16,6 +17,7 @@ interface EditorState {
   closeFolder: (root: string) => Promise<void>
   toggleDirectory: (path: string) => Promise<void>
   openFile: (path: string) => Promise<void>
+  closeFile: (path: string) => Promise<void>
   setDirty: (path: string, value: boolean) => void
   refreshFile: (path: string) => Promise<void>
   save: () => Promise<void>
@@ -37,6 +39,7 @@ function withoutSubtree<T>(record: Record<string, T>, root: string): Record<stri
 
 export const useEditorStore = create<EditorState>((set, get) => ({
   workspaces: [],
+  openPaths: [],
   entries: {},
   expanded: {},
   pending: {},
@@ -99,6 +102,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       expanded: withoutSubtree(state.expanded, root),
       pending: withoutSubtree(state.pending, root),
       dirty: withoutSubtree(state.dirty, root),
+      openPaths: state.openPaths.filter((path) => !isUnder(root, path)),
       activePath: state.activePath && isUnder(root, state.activePath) ? null : state.activePath
     }))
   },
@@ -143,10 +147,40 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         openBuffer(file.path, file.text)
       }
 
-      set({ activePath: path })
+      set((state) => ({
+        activePath: path,
+        openPaths: state.openPaths.includes(path) ? state.openPaths : [...state.openPaths, path]
+      }))
     } catch (error) {
       fail(error)
     }
+  },
+
+  closeFile: async (path) => {
+    if (get().dirty[path] && !window.confirm('Discard unsaved changes in this file?')) return
+
+    const { disposeBuffer } = await import('@renderer/editor/buffers')
+    disposeBuffer(path)
+
+    set((state) => {
+      const index = state.openPaths.indexOf(path)
+      const openPaths = state.openPaths.filter((entry) => entry !== path)
+      const dirty = { ...state.dirty }
+
+      delete dirty[path]
+
+      return {
+        openPaths,
+        dirty,
+        activePath:
+          state.activePath === path
+            ? openPaths[Math.min(index, openPaths.length - 1)] ?? null
+            : state.activePath
+      }
+    })
+
+    const { dirty } = get()
+    void window.kvcode.reportDirty(Object.keys(dirty).filter((key) => dirty[key]))
   },
 
   setDirty: (path, value) => {
@@ -197,10 +231,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }
   }
 }))
-
-export function selectIsDirty(state: EditorState): boolean {
-  return state.activePath !== null && Boolean(state.dirty[state.activePath])
-}
 
 window.kvcode.onWorkspaceOpened((workspace) => {
   useLayoutStore.getState().openPanel('code')

@@ -75,6 +75,15 @@ export function markSaved(path: string): void {
   }
 }
 
+export function disposeBuffer(path: string): void {
+  const buffer = buffers.get(path)
+
+  if (!buffer) return
+
+  buffer.model.dispose()
+  buffers.delete(path)
+}
+
 export function disposeBuffersUnder(root: string): void {
   for (const [path, buffer] of buffers) {
     if (isUnder(root, path)) {

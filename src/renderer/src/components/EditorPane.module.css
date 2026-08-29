@@ -5,30 +5,91 @@
   min-height: 0;
 }
 
+.tabs {
+  display: flex;
+  align-items: stretch;
+  flex: none;
+  height: 38px;
+  padding: 0 6px;
+  gap: 2px;
+  border-bottom: 1px solid var(--border-soft);
+  background-color: var(--surface-header);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
 .tab {
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 38px;
-  padding: 0 14px;
-  border-bottom: 1px solid var(--border-soft);
-  background-color: var(--surface-header);
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
+  flex: none;
+  max-width: 200px;
+  margin: 5px 0;
+  padding-right: 3px;
+  border-radius: var(--radius-row);
+  corner-shape: var(--corner);
+  color: var(--text-faint);
+}
+
+.tab:hover:not(.tabOn) {
+  color: var(--text-primary);
+  background-color: var(--surface-hover);
+}
+
+.tabOn {
+  color: var(--text-primary);
+  background-color: var(--surface-active);
+}
+
+.tabOpen {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  height: 28px;
+  padding: 0 4px 0 9px;
+  color: inherit;
 }
 
 .tabIcon {
   display: flex;
+  flex: none;
   color: var(--text-accent);
 }
 
 .tabName {
+  min-width: 0;
+  font-size: var(--text-sm);
   font-weight: 500;
-  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dirtyDot {
   composes: dot from './parts.module.css';
+  margin-right: 3px;
+}
+
+.tabClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border-radius: var(--radius-row);
+  corner-shape: var(--corner);
+  color: inherit;
+  opacity: 0;
+}
+
+.tab:hover .tabClose,
+.tabClose:focus-visible {
+  opacity: 1;
+}
+
+.tabClose:hover {
+  background-color: var(--surface-active);
 }
 
 .surface {

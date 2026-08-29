@@ -1,7 +1,7 @@
 import { Suspense, lazy } from 'react'
-import { selectIsDirty, useEditorStore } from '@renderer/state/editorStore'
+import { useEditorStore } from '@renderer/state/editorStore'
 import { basename } from '@renderer/lib/path'
-import { FileIcon } from './Icons'
+import { CloseIcon, FileIcon } from './Icons'
 import styles from './EditorPane.module.css'
 
 const CodeEditor = lazy(() =>
@@ -9,19 +9,40 @@ const CodeEditor = lazy(() =>
 )
 
 export function EditorPane() {
+  const openPaths = useEditorStore((state) => state.openPaths)
   const activePath = useEditorStore((state) => state.activePath)
-  const isDirty = useEditorStore(selectIsDirty)
+  const dirty = useEditorStore((state) => state.dirty)
+  const openFile = useEditorStore((state) => state.openFile)
+  const closeFile = useEditorStore((state) => state.closeFile)
 
-  if (!activePath) return null
+  if (openPaths.length === 0) return null
 
   return (
     <div className={styles.pane}>
-      <div className={styles.tab}>
-        <span className={styles.tabIcon}>
-          <FileIcon size={13} />
-        </span>
-        <span className={styles.tabName}>{basename(activePath)}</span>
-        {isDirty ? <span className={styles.dirtyDot} /> : null}
+      <div className={styles.tabs}>
+        {openPaths.map((path) => (
+          <div
+            key={path}
+            className={path === activePath ? `${styles.tab} ${styles.tabOn}` : styles.tab}
+            title={path}
+          >
+            <button type="button" className={styles.tabOpen} onClick={() => void openFile(path)}>
+              <span className={styles.tabIcon}>
+                <FileIcon size={13} />
+              </span>
+              <span className={styles.tabName}>{basename(path)}</span>
+            </button>
+            {dirty[path] ? <span className={styles.dirtyDot} /> : null}
+            <button
+              type="button"
+              className={styles.tabClose}
+              aria-label={`Close ${basename(path)}`}
+              onClick={() => void closeFile(path)}
+            >
+              <CloseIcon size={10} />
+            </button>
+          </div>
+        ))}
       </div>
       <div className={styles.surface}>
         <Suspense fallback={null}>
