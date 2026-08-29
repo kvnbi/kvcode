@@ -3,21 +3,28 @@ import { IpcChannel } from '@shared/ipc'
 import type { PermissionKind, PermissionReply, PermissionRequest } from '@shared/permissions'
 
 const pending = new Map<string, (reply: PermissionReply) => void>()
-const grantedPaths = new Set<string>()
+const readGrants = new Set<string>()
+const writeGrants = new Set<string>()
+const commandGrants = new Set<string>()
 
-let grantedCommands = false
 let counter = 0
 
-export function isPathGranted(target: string): boolean {
-  for (const granted of grantedPaths) {
+function covers(grants: Set<string>, target: string): boolean {
+  for (const granted of grants) {
     if (target === granted || target.startsWith(`${granted}/`)) return true
   }
 
   return false
 }
 
-export function commandsGranted(): boolean {
-  return grantedCommands
+export function isPathGranted(target: string, kind: PermissionKind): boolean {
+  if (kind === 'write') return covers(writeGrants, target)
+
+  return covers(readGrants, target) || covers(writeGrants, target)
+}
+
+export function isCommandGranted(command: string): boolean {
+  return commandGrants.has(command.trim())
 }
 
 export function settlePermission(reply: PermissionReply): void {
@@ -40,7 +47,7 @@ export async function requestPermission(
   if (!window || window.isDestroyed()) return false
 
   counter += 1
-  const request: PermissionRequest = { id: `p${counter}`, kind, detail, cwd }
+  const request: PermissionRequest = { id: `p${counter}`, kind, detail, scope, cwd }
 
   const reply = await new Promise<PermissionReply>((resolve) => {
     pending.set(request.id, resolve)
@@ -50,8 +57,9 @@ export async function requestPermission(
   if (reply.decision === 'deny') return false
 
   if (reply.decision === 'session') {
-    if (kind === 'command') grantedCommands = true
-    else grantedPaths.add(scope)
+    if (kind === 'command') commandGrants.add(detail.trim())
+    else if (kind === 'write') writeGrants.add(scope)
+    else readGrants.add(scope)
   }
 
   return true

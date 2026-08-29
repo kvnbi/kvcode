@@ -10,9 +10,23 @@ import { Panel } from './Panel'
 import styles from './PromptPanel.module.css'
 
 const TITLES: Record<PermissionRequest['kind'], string> = {
-  read: 'Read a file outside your open folders',
-  write: 'Write a file outside your open folders',
+  read: 'Read outside your open folders',
+  write: 'Write outside your open folders',
   command: 'Run a command on your computer'
+}
+
+const ALLOW_LABELS: Record<PermissionRequest['kind'], string> = {
+  read: 'Allow this folder',
+  write: 'Allow this folder',
+  command: 'Allow this command'
+}
+
+function scopeNote(request: PermissionRequest): string {
+  if (request.kind === 'command') return 'Allowing covers this exact command for the session'
+
+  const verb = request.kind === 'write' ? 'writing to' : 'reading'
+
+  return `Allowing covers ${verb} everything in ${request.scope} for the session`
 }
 
 function Request({ request }: { request: PermissionRequest }) {
@@ -23,6 +37,7 @@ function Request({ request }: { request: PermissionRequest }) {
       <div className={styles.requestTitle}>{TITLES[request.kind]}</div>
       <div className={styles.requestDetail}>{request.detail}</div>
       {request.cwd ? <div className={styles.requestCwd}>in {request.cwd}</div> : null}
+      <div className={styles.requestScope}>{scopeNote(request)}</div>
       {looksRisky(request.detail) ? (
         <div className={styles.requestWarning}>This can change things outside this project.</div>
       ) : null}
@@ -30,11 +45,11 @@ function Request({ request }: { request: PermissionRequest }) {
         <button type="button" className={styles.choice} onClick={() => decide('deny')}>
           Deny
         </button>
-        <button type="button" className={styles.choice} onClick={() => decide('session')}>
-          Allow for the session
-        </button>
-        <button type="button" className={styles.allow} onClick={() => decide('once')}>
+        <button type="button" className={styles.choice} onClick={() => decide('once')}>
           Allow once
+        </button>
+        <button type="button" className={styles.allow} onClick={() => decide('session')}>
+          {ALLOW_LABELS[request.kind]}
         </button>
       </div>
     </div>

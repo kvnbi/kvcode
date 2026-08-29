@@ -1,9 +1,10 @@
 import { spawn } from 'node:child_process'
 import { homedir } from 'node:os'
 import type Anthropic from '@anthropic-ai/sdk'
+import { isReadOnlyCommand } from '@shared/commands'
 import { recordChange } from '../services/changes'
 import { cleanEnvironment } from '../services/environment'
-import { commandsGranted, requestPermission } from '../services/permissions'
+import { isCommandGranted, requestPermission } from '../services/permissions'
 import { findFiles, searchText } from '../services/search'
 import { listRoots, readDirectory, readTextFile, writeTextFile } from '../services/workspace'
 
@@ -219,8 +220,10 @@ export async function runTool(name: string, input: unknown): Promise<string> {
     const command = required(input, 'command', 'run_command')
     const cwd = field(input, 'cwd') ?? listRoots()[0] ?? homedir()
 
-    if (!commandsGranted()) {
-      const granted = await requestPermission('command', command, 'command', cwd)
+    const trusted = isReadOnlyCommand(command) && listRoots().some((root) => cwd === root || cwd.startsWith(`${root}/`))
+
+    if (!trusted && !isCommandGranted(command)) {
+      const granted = await requestPermission('command', command, command, cwd)
 
       if (!granted) return 'The user did not allow this command to run.'
     }

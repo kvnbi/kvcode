@@ -4,6 +4,7 @@ export interface PermissionRequest {
   id: string
   kind: PermissionKind
   detail: string
+  scope: string
   cwd: string
 }
 

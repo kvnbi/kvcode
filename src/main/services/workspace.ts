@@ -66,35 +66,39 @@ function accessError(error: unknown, path: string): Error {
   return error instanceof Error ? error : new Error(String(error))
 }
 
-async function adoptDirectory(target: string): Promise<void> {
-  if (allowedRoots.has(target)) return
-
+async function grantScope(target: string): Promise<string> {
   try {
-    if (!(await stat(target)).isDirectory()) return
+    if ((await stat(target)).isDirectory()) return target
   } catch {
-    return
+    return dirname(target)
   }
 
-  const workspace = await registerWorkspace(target)
+  return dirname(target)
+}
+
+function showFolder(scope: string): void {
+  if (allowedRoots.has(scope)) return
+
   const window = BrowserWindow.getAllWindows()[0]
 
   if (window && !window.isDestroyed()) {
-    window.webContents.send(IpcChannel.WorkspaceOpened, workspace)
+    window.webContents.send(IpcChannel.WorkspaceOpened, { name: basename(scope) || scope, path: scope })
   }
 }
 
 async function authorize(path: string, kind: 'read' | 'write'): Promise<string> {
   const target = await realTarget(path)
 
-  if (insideRoots(target) || isPathGranted(target)) return target
+  if (insideRoots(target) || isPathGranted(target, kind)) return target
 
-  const granted = await requestPermission(kind, target, target)
+  const scope = await grantScope(target)
+  const granted = await requestPermission(kind, target, scope)
 
   if (!granted) {
     throw new Error('The user did not allow access to this path')
   }
 
-  if (isPathGranted(target)) await adoptDirectory(target)
+  if (isPathGranted(target, kind)) showFolder(scope)
 
   return target
 }

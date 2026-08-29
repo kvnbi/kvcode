@@ -144,6 +144,12 @@
   overflow-wrap: anywhere;
 }
 
+.requestScope {
+  color: var(--text-faint);
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}
+
 .requestWarning {
   color: var(--text-primary);
   font-size: var(--text-xs);
