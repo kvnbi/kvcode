@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 import type { ChatEvent, ChatSettings } from '@shared/chat'
 import type { PermissionReply, PermissionRequest } from '@shared/permissions'
 import type { SessionEntry, SessionSummary } from '@shared/sessions'
+import type { FileChange } from '@shared/changes'
 import type { TerminalChunk, TerminalSnapshot } from '@shared/terminals'
 import type { ProviderId } from '@shared/providers'
 import { IpcChannel } from '@shared/ipc'
@@ -52,6 +53,16 @@ const api = {
     ipcRenderer.on(IpcChannel.ChatEvent, listener)
     return () => {
       ipcRenderer.removeListener(IpcChannel.ChatEvent, listener)
+    }
+  },
+  listChanges: () => unwrap<FileChange[]>(IpcChannel.ChangeList),
+  revertChange: (id: string) => unwrap<string>(IpcChannel.ChangeRevert, id),
+  clearChanges: () => unwrap<null>(IpcChannel.ChangeClear),
+  onChangesUpdated: (handler: () => void) => {
+    const listener = () => handler()
+    ipcRenderer.on(IpcChannel.ChangesUpdated, listener)
+    return () => {
+      ipcRenderer.removeListener(IpcChannel.ChangesUpdated, listener)
     }
   },
   openTerminals: () => unwrap<TerminalSnapshot[]>(IpcChannel.TerminalOpen),

@@ -29,5 +29,9 @@ export const IpcChannel = {
   TerminalResize: 'terminal:resize',
   TerminalClose: 'terminal:close',
   TerminalData: 'terminal:data',
-  TerminalExit: 'terminal:exit'
+  TerminalExit: 'terminal:exit',
+  ChangeList: 'changes:list',
+  ChangeRevert: 'changes:revert',
+  ChangeClear: 'changes:clear',
+  ChangesUpdated: 'changes:updated'
 } as const

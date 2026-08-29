@@ -5,6 +5,7 @@ import type { PanelId } from '@renderer/state/layoutStore'
 import { ChatList } from './ChatList'
 import { CodePanel } from './CodePanel'
 import { Divider } from './Divider'
+import { DiffPanel } from './DiffPanel'
 import { PromptPanel } from './PromptPanel'
 import { Settings } from './Settings'
 import { Panel } from './Panel'
@@ -102,12 +103,13 @@ export function App() {
             <Fragment key={id}>
               <Divider label={`Resize ${TITLES[id]} panel`} onResize={(delta) => onDividerResize(index, delta)} />
               {id === 'code' ? <CodePanel width={widthFor(id)} /> : null}
+              {id === 'diff' ? <DiffPanel width={widthFor(id)} /> : null}
               {id === 'terminal' ? (
                 <Suspense fallback={null}>
                   <TerminalPanel width={widthFor(id)} />
                 </Suspense>
               ) : null}
-              {id !== 'code' && id !== 'terminal' ? (
+              {id !== 'code' && id !== 'diff' && id !== 'terminal' ? (
                 <Panel title={TITLES[id]} width={widthFor(id)} />
               ) : null}
             </Fragment>

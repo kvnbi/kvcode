@@ -1,0 +1,164 @@
+.panel {
+  composes: panel from './Panel.module.css';
+}
+
+.flexible {
+  composes: flexible from './Panel.module.css';
+}
+
+.header {
+  composes: header from './Panel.module.css';
+  gap: 8px;
+  padding: 0 8px 0 14px;
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+}
+
+.clear {
+  flex: none;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: var(--radius-row);
+  corner-shape: var(--corner);
+  color: var(--text-faint);
+  font-size: var(--text-sm);
+}
+
+.clear:hover {
+  color: var(--text-primary);
+  background-color: var(--surface-hover);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1;
+  min-height: 0;
+  padding: 14px 0 18px;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+.empty {
+  padding: 0 16px;
+  color: var(--text-faint);
+  font-size: var(--text-sm);
+}
+
+.change {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.fileRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px 8px;
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.added {
+  flex: none;
+  color: var(--kv-signal-ok);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.removed {
+  flex: none;
+  color: var(--kv-signal-alert);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.reverted {
+  flex: none;
+  color: var(--text-faint);
+  font-size: var(--text-xs);
+}
+
+.revert {
+  flex: none;
+  height: 22px;
+  padding: 0 9px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-row);
+  corner-shape: var(--corner);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+}
+
+.revert:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-top: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+  overflow-x: auto;
+}
+
+.line {
+  display: flex;
+  gap: 0;
+  min-width: min-content;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.7;
+  white-space: pre;
+}
+
+.gutter {
+  flex: none;
+  width: 40px;
+  padding-right: 8px;
+  color: var(--text-faint);
+  text-align: right;
+  user-select: none;
+}
+
+.text {
+  flex: 1;
+  padding: 0 14px 0 10px;
+  color: var(--text-secondary);
+}
+
+.add {
+  background-color: rgba(182, 196, 178, 0.12);
+}
+
+.add .text {
+  color: var(--text-primary);
+}
+
+.remove {
+  background-color: rgba(211, 172, 160, 0.12);
+}
+
+.gap {
+  padding: 4px 16px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  background-color: var(--surface-header);
+}

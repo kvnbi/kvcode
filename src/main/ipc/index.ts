@@ -3,6 +3,7 @@ import { IpcChannel } from '@shared/ipc'
 import type { ChatEvent, ChatSettings } from '@shared/chat'
 import type { PermissionReply } from '@shared/permissions'
 import type { SessionEntry, SessionSummary } from '@shared/sessions'
+import type { FileChange } from '@shared/changes'
 import type { TerminalSnapshot } from '@shared/terminals'
 import type { ProviderId } from '@shared/providers'
 import type { FileContent, FileNode, IpcResult, Workspace } from '@shared/types'
@@ -14,6 +15,7 @@ import {
   renameSession,
   readSession
 } from '../services/conversations'
+import { clearChanges, listChanges, revertChange } from '../services/changes'
 import { settlePermission } from '../services/permissions'
 import {
   closeTerminal,
@@ -148,6 +150,15 @@ export function registerIpcHandlers(): void {
 
   handle<null>(IpcChannel.SessionRename, async (id: string, title: string) => {
     renameSession(id, title)
+    return null
+  })
+
+  handle<FileChange[]>(IpcChannel.ChangeList, async () => listChanges())
+
+  handle<string>(IpcChannel.ChangeRevert, (id: string) => revertChange(id))
+
+  handle<null>(IpcChannel.ChangeClear, async () => {
+    clearChanges()
     return null
   })
 
