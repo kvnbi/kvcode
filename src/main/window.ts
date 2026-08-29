@@ -14,8 +14,8 @@ function isExternalWebUrl(value: string): boolean {
 
 export function createMainWindow(): BrowserWindow {
   const window = new BrowserWindow({
-    width: 1440,
-    height: 860,
+    width: 1280,
+    height: 800,
     minWidth: 1100,
     minHeight: 600,
     show: false,
