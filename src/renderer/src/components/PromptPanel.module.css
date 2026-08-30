@@ -108,7 +108,7 @@
   flex-direction: column;
   flex: none;
   gap: 10px;
-  padding: 16px 32px;
+  padding: 14px 32px 12px;
   border-top: 1px solid var(--border-soft);
 }
 

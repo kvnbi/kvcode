@@ -8,6 +8,7 @@ export const IpcChannel = {
   WriteLayout: 'layout:write',
   ReadSettings: 'settings:read',
   WriteSettings: 'settings:write',
+  ModelList: 'settings:models',
   WriteApiKey: 'settings:write-key',
   ClearApiKey: 'settings:clear-key',
   ChatSend: 'chat:send',

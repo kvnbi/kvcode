@@ -24,7 +24,7 @@ export interface ModelTransport {
   stream: (params: TransportParams) => TransportStream
 }
 
-const BASE_URLS: Record<Exclude<ProviderId, 'anthropic'>, string> = {
+export const BASE_URLS: Record<Exclude<ProviderId, 'anthropic'>, string> = {
   openai: 'https://api.openai.com/v1',
   google: 'https://generativelanguage.googleapis.com/v1beta/openai',
   deepseek: 'https://api.deepseek.com/v1',

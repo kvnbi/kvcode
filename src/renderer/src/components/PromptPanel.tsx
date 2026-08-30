@@ -6,6 +6,7 @@ import { useChatStore } from '@renderer/state/chatStore'
 import type { ChatMessage } from '@renderer/state/chatStore'
 import { usePermissionStore } from '@renderer/state/permissionStore'
 import { Markdown } from './Markdown'
+import { ModelBar } from './ModelBar'
 import { Panel } from './Panel'
 import styles from './PromptPanel.module.css'
 
@@ -163,6 +164,7 @@ export function PromptPanel({ width }: { width?: number }) {
         <div className={styles.footer}>
           {request ? <Request request={request} /> : null}
           <Composer blocked={Boolean(request)} />
+          <ModelBar />
         </div>
       </div>
     </Panel>

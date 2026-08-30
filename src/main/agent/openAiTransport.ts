@@ -95,15 +95,23 @@ export function createOpenAiTransport(
               : { max_tokens: Math.min(params.maxTokens, COMPAT_MAX_TOKENS) }),
             messages: toMessages(params.system, params.messages),
             tools: toTools(params.tools),
-            stream: true
+            stream: true,
+            ...(useCompletionTokens ? { stream_options: { include_usage: true } } : {})
           },
           { signal: params.signal }
         )
 
         const calls = new Map<number, PendingCall>()
         let text = ''
+        let inputTokens = 0
+        let outputTokens = 0
 
         for await (const chunk of stream) {
+          if (chunk.usage) {
+            inputTokens = chunk.usage.prompt_tokens
+            outputTokens = chunk.usage.completion_tokens
+          }
+
           const delta = chunk.choices[0]?.delta
 
           if (!delta) continue
@@ -149,8 +157,8 @@ export function createOpenAiTransport(
           stop_reason: toolUses.length > 0 ? 'tool_use' : 'end_turn',
           stop_sequence: null,
           usage: {
-            input_tokens: 0,
-            output_tokens: 0,
+            input_tokens: inputTokens,
+            output_tokens: outputTokens,
             cache_creation_input_tokens: null,
             cache_read_input_tokens: null,
             server_tool_use: null,

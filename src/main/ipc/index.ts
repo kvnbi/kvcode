@@ -16,6 +16,7 @@ import {
   readSession
 } from '../services/conversations'
 import { clearChanges, listChanges, revertChange } from '../services/changes'
+import { forgetModels, listModels } from '../services/models'
 import { settlePermission } from '../services/permissions'
 import {
   closeTerminal,
@@ -54,6 +55,7 @@ function settings(): ChatSettings {
   return {
     mode: preferences.mode,
     provider: preferences.provider,
+    model: preferences.models[preferences.provider],
     storedKeys: storedProviders(),
     keychainAvailable: secretsAvailable()
   }
@@ -102,17 +104,28 @@ export function registerIpcHandlers(): void {
     if (next.mode) patch.mode = next.mode
     if (next.provider) patch.provider = next.provider
 
+    if (next.model) {
+      const current = readPreferences()
+      const provider = next.provider ?? current.provider
+
+      patch.models = { ...current.models, [provider]: next.model }
+    }
+
     writePreferences(patch)
     return settings()
   })
 
+  handle<string[]>(IpcChannel.ModelList, (provider: ProviderId) => listModels(provider))
+
   handle<ChatSettings>(IpcChannel.WriteApiKey, async (provider: ProviderId, value: string) => {
     writeApiKey(provider, value)
+    forgetModels(provider)
     return settings()
   })
 
   handle<ChatSettings>(IpcChannel.ClearApiKey, async (provider: ProviderId) => {
     clearApiKey(provider)
+    forgetModels(provider)
     return settings()
   })
 

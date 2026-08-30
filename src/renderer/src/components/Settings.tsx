@@ -1,20 +1,24 @@
 import { useEffect, useState } from 'react'
-import type { ChatSettings } from '@shared/chat'
 import { PROVIDERS, PROVIDER_LABELS } from '@shared/providers'
 import type { ProviderId } from '@shared/providers'
+import { useSettingsStore } from '@renderer/state/settingsStore'
 import { CloseIcon } from './Icons'
 import styles from './Settings.module.css'
 
 const SECTIONS = [{ id: 'models', label: 'Models' }]
 
 export function Settings({ onClose }: { onClose: () => void }) {
-  const [settings, setSettings] = useState<ChatSettings | null>(null)
+  const settings = useSettingsStore((state) => state.settings)
+  const load = useSettingsStore((state) => state.load)
+  const update = useSettingsStore((state) => state.update)
+  const saveApiKey = useSettingsStore((state) => state.saveKey)
+  const clearApiKey = useSettingsStore((state) => state.clearKey)
   const [keyDraft, setKeyDraft] = useState('')
   const [section, setSection] = useState(SECTIONS[0].id)
 
   useEffect(() => {
-    void window.kvcode.readSettings().then(setSettings)
-  }, [])
+    void load()
+  }, [load])
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -32,16 +36,16 @@ export function Settings({ onClose }: { onClose: () => void }) {
 
   async function selectProvider(next: ProviderId) {
     setKeyDraft('')
-    setSettings(await window.kvcode.writeSettings({ provider: next }))
+    await update({ provider: next })
   }
 
   async function saveKey() {
-    setSettings(await window.kvcode.writeApiKey(provider, keyDraft.trim()))
+    await saveApiKey(provider, keyDraft.trim())
     setKeyDraft('')
   }
 
   async function removeKey() {
-    setSettings(await window.kvcode.clearApiKey(provider))
+    await clearApiKey(provider)
   }
 
   return (

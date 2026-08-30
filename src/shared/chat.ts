@@ -13,6 +13,7 @@ export type ChatEvent =
 export interface ChatSettings {
   mode: 'direct' | 'proxy'
   provider: ProviderId
+  model: string
   storedKeys: ProviderId[]
   keychainAvailable: boolean
 }

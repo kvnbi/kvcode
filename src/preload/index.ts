@@ -29,6 +29,7 @@ const api = {
   writeLayout: (text: string) => unwrap<null>(IpcChannel.WriteLayout, text),
   readSettings: () => unwrap<ChatSettings>(IpcChannel.ReadSettings),
   writeSettings: (next: Partial<ChatSettings>) => unwrap<ChatSettings>(IpcChannel.WriteSettings, next),
+  listModels: (provider: ProviderId) => unwrap<string[]>(IpcChannel.ModelList, provider),
   writeApiKey: (provider: ProviderId, value: string) =>
     unwrap<ChatSettings>(IpcChannel.WriteApiKey, provider, value),
   clearApiKey: (provider: ProviderId) => unwrap<ChatSettings>(IpcChannel.ClearApiKey, provider),
