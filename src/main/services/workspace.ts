@@ -1,7 +1,5 @@
 import { readdir, readFile, rename, writeFile, stat, realpath } from 'node:fs/promises'
 import { basename, dirname, join, resolve, sep } from 'node:path'
-import { BrowserWindow } from 'electron'
-import { IpcChannel } from '@shared/ipc'
 import type { FileContent, FileNode, Workspace } from '@shared/types'
 import { isPathGranted, requestPermission } from './permissions'
 
@@ -76,16 +74,6 @@ async function grantScope(target: string): Promise<string> {
   return dirname(target)
 }
 
-function showFolder(scope: string): void {
-  if (allowedRoots.has(scope)) return
-
-  const window = BrowserWindow.getAllWindows()[0]
-
-  if (window && !window.isDestroyed()) {
-    window.webContents.send(IpcChannel.WorkspaceOpened, { name: basename(scope) || scope, path: scope })
-  }
-}
-
 async function authorize(path: string, kind: 'read' | 'write'): Promise<string> {
   const target = await realTarget(path)
 
@@ -97,8 +85,6 @@ async function authorize(path: string, kind: 'read' | 'write'): Promise<string> 
   if (!granted) {
     throw new Error('The user did not allow access to this path')
   }
-
-  if (isPathGranted(target, kind)) showFolder(scope)
 
   return target
 }

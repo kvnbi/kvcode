@@ -146,7 +146,7 @@ function onEvent(event: ChatEvent): void {
   }
 
   if (event.type === 'file') {
-    void useEditorStore.getState().refreshFile(event.path)
+    void useEditorStore.getState().notifyChanged(event.path)
     return
   }
 

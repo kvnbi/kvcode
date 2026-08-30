@@ -1,6 +1,6 @@
 import { useEditorStore } from '@renderer/state/editorStore'
 import type { Workspace } from '@shared/types'
-import { ChevronIcon, CloseIcon } from './Icons'
+import { ChevronIcon, CloseIcon, PlusIcon } from './Icons'
 import { FileTree } from './FileTree'
 import styles from './Sidebar.module.css'
 
@@ -41,9 +41,15 @@ function Root({ workspace }: { workspace: Workspace }) {
 
 export function Sidebar() {
   const workspaces = useEditorStore((state) => state.workspaces)
+  const openFolders = useEditorStore((state) => state.openFolders)
 
   return (
     <aside className={styles.sidebar}>
+      <button type="button" className={styles.open} onClick={() => void openFolders()}>
+        <PlusIcon size={13} />
+        Open folder
+      </button>
+
       <div className={styles.scroll}>
         {workspaces.map((workspace) => (
           <Root key={workspace.path} workspace={workspace} />

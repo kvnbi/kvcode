@@ -9,6 +9,27 @@
   background-color: var(--surface-panel);
 }
 
+.open {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  height: 30px;
+  margin: 8px 8px 0;
+  padding: 0 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-control);
+  corner-shape: var(--corner);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.open:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
 .scroll {
   flex: 1;
   min-height: 0;

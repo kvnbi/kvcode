@@ -3,6 +3,7 @@ import type Anthropic from '@anthropic-ai/sdk'
 import type { ChatEvent } from '@shared/chat'
 import { appendEntry, currentSession, openSession, startSession } from '../services/conversations'
 import { AGENT_TOOLS, WRITING_TOOLS, runTool } from './tools'
+import { listRoots } from '../services/workspace'
 import { createTransport } from './transport'
 
 const MAX_TOKENS = 64000
@@ -66,10 +67,16 @@ async function resolveCalls(
         content: await runTool(call.name, call.input)
       })
 
-      if (WRITING_TOOLS.has(call.name)) {
-        const written = (call.input as { path?: string }).path
+      const input = call.input as { path?: string; cwd?: string }
 
-        if (written) emit({ type: 'file', path: written })
+      if (WRITING_TOOLS.has(call.name)) {
+        if (input.path) emit({ type: 'file', path: input.path })
+      }
+
+      if (call.name === 'run_command') {
+        const where = input.cwd ?? listRoots()[0]
+
+        if (where) emit({ type: 'file', path: where })
       }
     } catch (error) {
       results.push({

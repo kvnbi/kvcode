@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { FileChange } from '@shared/changes'
 import { basename } from '@renderer/lib/path'
 import { useEditorStore } from '@renderer/state/editorStore'
+import { useLayoutStore } from '@renderer/state/layoutStore'
 import styles from './DiffPanel.module.css'
 
 export function DiffPanel({ width }: { width?: number }) {
@@ -16,6 +17,11 @@ export function DiffPanel({ width }: { width?: number }) {
     void refresh()
     return window.kvcode.onChangesUpdated(() => void refresh())
   }, [refresh])
+
+  async function reveal(path: string) {
+    useLayoutStore.getState().openPanel('code')
+    await useEditorStore.getState().openFile(path)
+  }
 
   async function revert(id: string) {
     const path = await window.kvcode.revertChange(id)
@@ -42,9 +48,14 @@ export function DiffPanel({ width }: { width?: number }) {
         {changes.map((change) => (
           <div key={change.id} className={styles.change}>
             <div className={styles.fileRow}>
-              <span className={styles.name} title={change.path}>
+              <button
+                type="button"
+                className={styles.name}
+                title={change.path}
+                onClick={() => void reveal(change.path)}
+              >
                 {basename(change.path)}
-              </span>
+              </button>
               <span className={styles.added}>{`+${change.added}`}</span>
               <span className={styles.removed}>{`-${change.removed}`}</span>
               {change.reverted ? (

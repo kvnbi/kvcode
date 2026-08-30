@@ -1,6 +1,5 @@
 import { create } from 'zustand'
-import { isUnder } from '@renderer/lib/path'
-import { useLayoutStore } from '@renderer/state/layoutStore'
+import { dirname, isUnder } from '@renderer/lib/path'
 import type { FileNode, Workspace } from '@shared/types'
 
 interface EditorState {
@@ -20,6 +19,8 @@ interface EditorState {
   closeFile: (path: string) => Promise<void>
   setDirty: (path: string, value: boolean) => void
   refreshFile: (path: string) => Promise<void>
+  refreshDirectory: (path: string) => Promise<void>
+  notifyChanged: (path: string) => Promise<void>
   save: () => Promise<void>
 }
 
@@ -194,6 +195,30 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     })
   },
 
+  refreshDirectory: async (path) => {
+    if (!get().entries[path]) return
+
+    try {
+      const children = await window.kvcode.readDirectory(path)
+      set((state) => ({ entries: { ...state.entries, [path]: children } }))
+    } catch {
+      return
+    }
+  },
+
+  notifyChanged: async (path) => {
+    if (get().entries[path]) {
+      await get().refreshDirectory(path)
+      return
+    }
+
+    const { hasBuffer } = await import('@renderer/editor/buffers')
+
+    if (hasBuffer(path)) await get().refreshFile(path)
+
+    await get().refreshDirectory(dirname(path))
+  },
+
   refreshFile: async (path) => {
     try {
       const file = await window.kvcode.readFile(path)
@@ -231,8 +256,3 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }
   }
 }))
-
-window.kvcode.onWorkspaceOpened((workspace) => {
-  useLayoutStore.getState().openPanel('code')
-  void useEditorStore.getState().addWorkspaces([workspace])
-})
