@@ -87,3 +87,8 @@
 .usageHigh {
   color: var(--text-warning, #d99a4e);
 }
+
+.usageOver {
+  color: var(--text-danger, #e06c5c);
+  font-weight: 600;
+}

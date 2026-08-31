@@ -144,7 +144,7 @@ export function registerIpcHandlers(): void {
     return null
   })
 
-  handle<{ tokens: number; limit: number }>(IpcChannel.ChatUsage, async () => sessionUsage())
+  handle<number>(IpcChannel.ChatUsage, async () => sessionUsage())
 
   handle<SessionSummary[]>(IpcChannel.SessionList, async () => listSessions())
 

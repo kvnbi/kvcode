@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { ChatEvent } from '@shared/chat'
+import { formatTokens } from '@shared/models'
 import type { SessionEntry, SessionSummary } from '@shared/sessions'
 import { useEditorStore } from './editorStore'
 import { usePermissionStore } from './permissionStore'
@@ -17,7 +18,7 @@ interface ChatState {
   activeId: string
   streaming: string
   isRunning: boolean
-  usage: { tokens: number; limit: number } | null
+  usage: number | null
   send: (prompt: string) => Promise<void>
   cancel: () => Promise<void>
   refreshSessions: () => Promise<void>
@@ -236,12 +237,13 @@ function onEvent(event: ChatEvent): void {
   }
 
   if (event.type === 'usage') {
-    useChatStore.setState({ usage: { tokens: event.tokens, limit: event.limit } })
+    useChatStore.setState({ usage: event.tokens })
     return
   }
 
   if (event.type === 'compacted') {
-    append('tool', `compacted to about ${Math.round(event.tokens / 1000)}k tokens`, 'context')
+    useChatStore.setState({ usage: event.tokens })
+    append('tool', `compacted to about ${formatTokens(event.tokens)} tokens`, 'context')
     return
   }
 

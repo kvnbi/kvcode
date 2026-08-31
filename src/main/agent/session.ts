@@ -12,13 +12,14 @@ import {
 } from '../services/conversations'
 import { AGENT_TOOLS, WRITING_TOOLS, runTool } from './tools'
 import { listRoots } from '../services/workspace'
-import { readPreferences } from '../services/settings'
 import {
+  charsFor,
   estimateText,
   estimateTokens,
   pruneHistory,
   safeCutIndex,
   summaryPrompt,
+  trimToBudget,
   withSummary
 } from './compaction'
 import type { ActiveModel } from './transport'
@@ -27,6 +28,8 @@ import { createTransport } from './transport'
 const MAX_TOKENS = 64000
 const MAX_STEPS = 40
 const COMPACT_AT = 0.7
+const SUMMARY_INPUT = 0.5
+const MIN_BUDGET = 1000
 const SUMMARY_TOKENS = 2000
 const CONTEXT_ERRORS = ['context length', 'context_length', 'too long', 'maximum context', 'prompt is too long']
 
@@ -66,15 +69,12 @@ function overhead(): number {
   return baseline
 }
 
-export function sessionUsage(): { tokens: number; limit: number } {
-  const preferences = readPreferences()
-  const limit = contextWindow(preferences.models[preferences.provider])
-
-  if (history.length === 0) return { tokens: 0, limit }
+export function sessionUsage(): number {
+  if (history.length === 0) return 0
 
   const stored = sessionTokens()
 
-  return { tokens: stored > 0 ? stored : overhead() + estimateTokens(history), limit }
+  return stored > 0 ? stored : overhead() + estimateTokens(history)
 }
 
 export function cancelTurn(): void {
@@ -99,11 +99,15 @@ function overLimit(message: string): boolean {
   return CONTEXT_ERRORS.some((hint) => value.includes(hint))
 }
 
-async function summarise(active: ActiveModel, older: Anthropic.MessageParam[]): Promise<string> {
+async function summarise(
+  active: ActiveModel,
+  older: Anthropic.MessageParam[],
+  inputBudget: number
+): Promise<string> {
   const stream = active.transport.stream({
     model: active.model,
     system: 'You write compact notes that let another assistant continue a conversation.',
-    messages: [{ role: 'user', content: summaryPrompt(older) }],
+    messages: [{ role: 'user', content: summaryPrompt(older, charsFor(inputBudget)) }],
     tools: [],
     maxTokens: SUMMARY_TOKENS,
     signal: new AbortController().signal
@@ -113,19 +117,21 @@ async function summarise(active: ActiveModel, older: Anthropic.MessageParam[]): 
 }
 
 async function compact(active: ActiveModel, emit: (event: ChatEvent) => void): Promise<void> {
-  const limit = contextWindow(active.model) * COMPACT_AT - overhead()
+  const window = contextWindow(active.model)
+  const budget = Math.max(MIN_BUDGET, Math.floor(window * COMPACT_AT) - overhead())
   const before = estimateTokens(history)
 
-  if (before <= limit) return
+  if (before <= budget) return
 
   history.splice(0, history.length, ...pruneHistory(history))
 
-  if (estimateTokens(history) > limit) {
+  if (estimateTokens(history) > budget) {
     const cut = safeCutIndex(history)
 
     if (cut > 0) {
-      const summary = await summarise(active, history.slice(0, cut))
+      const older = history.slice(0, cut)
       const recent = history.slice(cut)
+      const summary = await summarise(active, older, Math.floor(window * SUMMARY_INPUT))
 
       history.splice(0, history.length, ...withSummary(summary, recent))
       record('user', `Summary of earlier conversation:\n${summary}`, true)
@@ -134,6 +140,10 @@ async function compact(active: ActiveModel, emit: (event: ChatEvent) => void): P
         if (message.role === 'user' || message.role === 'assistant') record(message.role, message.content)
       }
     }
+  }
+
+  if (estimateTokens(history) > budget) {
+    history.splice(0, history.length, ...trimToBudget(history, budget))
   }
 
   const after = estimateTokens(history)
@@ -199,7 +209,7 @@ async function attempt(active: ActiveModel, emit: (event: ChatEvent) => void): P
     const used = message.usage.input_tokens || overhead() + estimateTokens(history)
 
     recordUsage(used)
-    emit({ type: 'usage', tokens: used, limit: contextWindow(active.model) })
+    emit({ type: 'usage', tokens: used })
 
     history.push({ role: 'assistant', content: message.content })
     record('assistant', message.content)

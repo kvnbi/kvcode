@@ -22,8 +22,9 @@ export function ModelBar() {
 
   if (!settings) return null
 
-  const limit = usage?.limit ?? contextWindow(settings.model)
-  const tokens = usage?.tokens ?? 0
+  const limit = contextWindow(settings.model)
+  const tokens = usage ?? 0
+  const ratio = tokens / limit
 
   const options = models.includes(settings.model) ? models : [settings.model, ...models]
 
@@ -59,8 +60,12 @@ export function ModelBar() {
       </div>
 
       <span
-        className={tokens / limit >= COMPACT_AT ? `${styles.usage} ${styles.usageHigh}` : styles.usage}
-        title={`${tokens.toLocaleString()} of ${limit.toLocaleString()} context tokens used`}
+        className={`${styles.usage} ${ratio >= 1 ? styles.usageOver : ratio >= COMPACT_AT ? styles.usageHigh : ''}`}
+        title={
+          ratio >= 1
+            ? `${tokens.toLocaleString()} tokens exceeds this model's ${limit.toLocaleString()} token window. Older messages will be summarised on your next message.`
+            : `${tokens.toLocaleString()} of ${limit.toLocaleString()} context tokens used`
+        }
       >
         {`${formatTokens(tokens)} / ${formatTokens(limit)}`}
       </span>
