@@ -6,7 +6,7 @@ import { usePermissionStore } from './permissionStore'
 
 export interface ChatMessage {
   id: string
-  role: 'user' | 'assistant' | 'tool' | 'error'
+  role: 'user' | 'assistant' | 'tool' | 'result' | 'thinking' | 'error'
   text: string
   tool?: string
 }
@@ -17,9 +17,11 @@ interface ChatState {
   activeId: string
   streaming: string
   isRunning: boolean
+  usage: { tokens: number; limit: number } | null
   send: (prompt: string) => Promise<void>
   cancel: () => Promise<void>
   refreshSessions: () => Promise<void>
+  refreshUsage: () => Promise<void>
   openSession: (id: string) => Promise<void>
   newSession: () => Promise<void>
   removeSession: (id: string) => Promise<void>
@@ -39,8 +41,43 @@ function append(role: ChatMessage['role'], text: string, tool?: string) {
   }))
 }
 
+interface StoredBlock {
+  type: string
+  text?: string
+  thinking?: string
+  name?: string
+  input?: unknown
+  content?: unknown
+  is_error?: boolean
+}
+
+const RESULT_LIMIT = 2000
+
+function resultText(content: unknown): string {
+  if (typeof content === 'string') return content
+
+  if (Array.isArray(content)) {
+    return content
+      .map((block) => {
+        const part = block as StoredBlock
+        if (typeof part?.text === 'string') return part.text
+        if (part?.type === 'image') return '[image]'
+        return ''
+      })
+      .filter(Boolean)
+      .join('\n')
+  }
+
+  return ''
+}
+
+function clamp(text: string): string {
+  return text.length > RESULT_LIMIT ? `${text.slice(0, RESULT_LIMIT)}...` : text
+}
+
 function toMessages(entries: SessionEntry[]): ChatMessage[] {
   const messages: ChatMessage[] = []
+  const names = new Map<string, string>()
 
   for (const entry of entries) {
     if (typeof entry.content === 'string') {
@@ -50,18 +87,44 @@ function toMessages(entries: SessionEntry[]): ChatMessage[] {
 
     if (!Array.isArray(entry.content)) continue
 
-    for (const block of entry.content as { type: string; text?: string; name?: string; input?: unknown }[]) {
+    for (const block of entry.content as StoredBlock[]) {
       if (block.type === 'text' && block.text) {
         messages.push({ id: nextId(), role: 'assistant', text: block.text })
+        continue
+      }
+
+      if (block.type === 'thinking' && block.thinking) {
+        messages.push({ id: nextId(), role: 'thinking', text: block.thinking })
+        continue
       }
 
       if (block.type === 'tool_use') {
+        const id = (block as { id?: string }).id
+        if (id && block.name) names.set(id, block.name)
         messages.push({ id: nextId(), role: 'tool', text: JSON.stringify(block.input), tool: block.name })
+        continue
+      }
+
+      if (block.type === 'tool_result') {
+        const text = clamp(resultText(block.content).trim())
+        if (text.length === 0) continue
+
+        const id = (block as { tool_use_id?: string }).tool_use_id
+        messages.push({
+          id: nextId(),
+          role: block.is_error === true ? 'error' : 'result',
+          text,
+          tool: id ? names.get(id) : undefined
+        })
       }
     }
   }
 
   return messages
+}
+
+function reason(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
 }
 
 async function stopTurn(): Promise<void> {
@@ -75,6 +138,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   activeId: '',
   streaming: '',
   isRunning: false,
+  usage: null,
 
   send: async (prompt) => {
     if (get().isRunning || prompt.trim().length === 0) return
@@ -85,7 +149,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       await window.kvcode.sendChat(prompt.trim())
     } catch (error) {
-      append('error', error instanceof Error ? error.message : String(error))
+      append('error', reason(error))
       set({ isRunning: false, streaming: '' })
     }
 
@@ -97,32 +161,64 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ isRunning: false, streaming: '' })
   },
 
+  refreshUsage: async () => {
+    try {
+      set({ usage: await window.kvcode.chatUsage() })
+    } catch {
+      set({ usage: null })
+    }
+  },
+
   refreshSessions: async () => {
-    set({ sessions: await window.kvcode.listSessions() })
+    try {
+      set({ sessions: await window.kvcode.listSessions() })
+    } catch {
+      set({ sessions: [] })
+    }
   },
 
   openSession: async (id) => {
-    await stopTurn()
-    const entries = await window.kvcode.openSession(id)
-    set({ messages: toMessages(entries), activeId: id, streaming: '', isRunning: false })
+    try {
+      await stopTurn()
+      const entries = await window.kvcode.openSession(id)
+      set({ messages: toMessages(entries), activeId: id, streaming: '', isRunning: false })
+      await get().refreshUsage()
+    } catch (error) {
+      set({ messages: [], activeId: '', streaming: '', isRunning: false })
+      append('error', `Could not open that chat. ${reason(error)}`)
+    }
   },
 
   newSession: async () => {
-    await stopTurn()
-    await window.kvcode.createSession()
-    set({ messages: [], activeId: '', streaming: '', isRunning: false })
+    try {
+      await stopTurn()
+      await window.kvcode.createSession()
+      set({ messages: [], activeId: '', streaming: '', isRunning: false })
+      await get().refreshUsage()
+    } catch (error) {
+      append('error', `Could not start a new chat. ${reason(error)}`)
+    }
   },
 
   removeSession: async (id) => {
-    await window.kvcode.deleteSession(id)
+    try {
+      await window.kvcode.deleteSession(id)
 
-    if (get().activeId === id) await get().newSession()
+      if (get().activeId === id) await get().newSession()
+    } catch (error) {
+      append('error', `Could not delete that chat. ${reason(error)}`)
+    }
 
     await get().refreshSessions()
   },
 
   renameSession: async (id, title) => {
-    await window.kvcode.renameSession(id, title)
+    try {
+      await window.kvcode.renameSession(id, title)
+    } catch (error) {
+      append('error', `Could not rename that chat. ${reason(error)}`)
+    }
+
     await get().refreshSessions()
   }
 }))
@@ -136,6 +232,16 @@ function onEvent(event: ChatEvent): void {
   if (event.type === 'session') {
     useChatStore.setState({ activeId: event.id })
     void useChatStore.getState().refreshSessions()
+    return
+  }
+
+  if (event.type === 'usage') {
+    useChatStore.setState({ usage: { tokens: event.tokens, limit: event.limit } })
+    return
+  }
+
+  if (event.type === 'compacted') {
+    append('tool', `compacted to about ${Math.round(event.tokens / 1000)}k tokens`, 'context')
     return
   }
 
@@ -168,5 +274,5 @@ function onEvent(event: ChatEvent): void {
 }
 
 window.kvcode.onChatEvent(onEvent)
-void window.kvcode.resetChat()
+void window.kvcode.resetChat().then(() => useChatStore.getState().refreshUsage())
 void useChatStore.getState().refreshSessions()

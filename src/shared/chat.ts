@@ -7,6 +7,8 @@ export type ChatEvent =
   | { type: 'tool'; name: string; detail: string }
   | { type: 'file'; path: string }
   | { type: 'message'; text: string }
+  | { type: 'usage'; tokens: number; limit: number }
+  | { type: 'compacted'; tokens: number }
   | { type: 'done' }
   | { type: 'error'; message: string }
 

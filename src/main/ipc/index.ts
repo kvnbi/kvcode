@@ -7,7 +7,7 @@ import type { FileChange } from '@shared/changes'
 import type { TerminalSnapshot } from '@shared/terminals'
 import type { ProviderId } from '@shared/providers'
 import type { FileContent, FileNode, IpcResult, Workspace } from '@shared/types'
-import { cancelTurn, loadSession, resetSession, runTurn } from '../agent/session'
+import { cancelTurn, loadSession, resetSession, runTurn, sessionUsage } from '../agent/session'
 import { setDirtyPaths } from '../agent/tools'
 import {
   deleteSession,
@@ -143,6 +143,8 @@ export function registerIpcHandlers(): void {
     resetSession()
     return null
   })
+
+  handle<{ tokens: number; limit: number }>(IpcChannel.ChatUsage, async () => sessionUsage())
 
   handle<SessionSummary[]>(IpcChannel.SessionList, async () => listSessions())
 

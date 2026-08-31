@@ -1,13 +1,34 @@
 import { homedir } from 'node:os'
+import { contextWindow } from '@shared/models'
 import type Anthropic from '@anthropic-ai/sdk'
 import type { ChatEvent } from '@shared/chat'
-import { appendEntry, currentSession, openSession, startSession } from '../services/conversations'
+import {
+  appendEntry,
+  currentSession,
+  openSession,
+  recordUsage,
+  sessionTokens,
+  startSession
+} from '../services/conversations'
 import { AGENT_TOOLS, WRITING_TOOLS, runTool } from './tools'
 import { listRoots } from '../services/workspace'
+import { readPreferences } from '../services/settings'
+import {
+  estimateText,
+  estimateTokens,
+  pruneHistory,
+  safeCutIndex,
+  summaryPrompt,
+  withSummary
+} from './compaction'
+import type { ActiveModel } from './transport'
 import { createTransport } from './transport'
 
 const MAX_TOKENS = 64000
 const MAX_STEPS = 40
+const COMPACT_AT = 0.7
+const SUMMARY_TOKENS = 2000
+const CONTEXT_ERRORS = ['context length', 'context_length', 'too long', 'maximum context', 'prompt is too long']
 
 const SYSTEM = [
   'You are the coding assistant inside kvcode, a desktop editor.',
@@ -21,6 +42,7 @@ const SYSTEM = [
 const history: Anthropic.MessageParam[] = []
 
 let controller: AbortController | null = null
+let baseline = 0
 
 export function resetSession(): void {
   history.length = 0
@@ -28,11 +50,31 @@ export function resetSession(): void {
 }
 
 export function loadSession(id: string): void {
+  const entries = openSession(id)
+  const marker = entries.map((entry) => entry.compacted === true).lastIndexOf(true)
+
   history.length = 0
 
-  for (const entry of openSession(id)) {
+  for (const entry of entries.slice(marker === -1 ? 0 : marker)) {
     history.push({ role: entry.role, content: entry.content } as Anthropic.MessageParam)
   }
+}
+
+function overhead(): number {
+  if (baseline === 0) baseline = estimateText(SYSTEM) + estimateText(JSON.stringify(AGENT_TOOLS))
+
+  return baseline
+}
+
+export function sessionUsage(): { tokens: number; limit: number } {
+  const preferences = readPreferences()
+  const limit = contextWindow(preferences.models[preferences.provider])
+
+  if (history.length === 0) return { tokens: 0, limit }
+
+  const stored = sessionTokens()
+
+  return { tokens: stored > 0 ? stored : overhead() + estimateTokens(history), limit }
 }
 
 export function cancelTurn(): void {
@@ -47,8 +89,56 @@ function textOf(message: Anthropic.Message): string {
     .join('')
 }
 
-function record(role: 'user' | 'assistant', content: unknown): void {
-  appendEntry({ role, content, at: new Date().toISOString() })
+function record(role: 'user' | 'assistant', content: unknown, compacted = false): void {
+  appendEntry({ role, content, at: new Date().toISOString(), compacted })
+}
+
+function overLimit(message: string): boolean {
+  const value = message.toLowerCase()
+
+  return CONTEXT_ERRORS.some((hint) => value.includes(hint))
+}
+
+async function summarise(active: ActiveModel, older: Anthropic.MessageParam[]): Promise<string> {
+  const stream = active.transport.stream({
+    model: active.model,
+    system: 'You write compact notes that let another assistant continue a conversation.',
+    messages: [{ role: 'user', content: summaryPrompt(older) }],
+    tools: [],
+    maxTokens: SUMMARY_TOKENS,
+    signal: new AbortController().signal
+  })
+
+  return textOf(await stream.finalMessage())
+}
+
+async function compact(active: ActiveModel, emit: (event: ChatEvent) => void): Promise<void> {
+  const limit = contextWindow(active.model) * COMPACT_AT - overhead()
+  const before = estimateTokens(history)
+
+  if (before <= limit) return
+
+  history.splice(0, history.length, ...pruneHistory(history))
+
+  if (estimateTokens(history) > limit) {
+    const cut = safeCutIndex(history)
+
+    if (cut > 0) {
+      const summary = await summarise(active, history.slice(0, cut))
+      const recent = history.slice(cut)
+
+      history.splice(0, history.length, ...withSummary(summary, recent))
+      record('user', `Summary of earlier conversation:\n${summary}`, true)
+
+      for (const message of recent) {
+        if (message.role === 'user' || message.role === 'assistant') record(message.role, message.content)
+      }
+    }
+  }
+
+  const after = estimateTokens(history)
+
+  if (after < before) emit({ type: 'compacted', tokens: after })
 }
 
 async function resolveCalls(
@@ -91,6 +181,46 @@ async function resolveCalls(
   return results
 }
 
+async function attempt(active: ActiveModel, emit: (event: ChatEvent) => void): Promise<boolean> {
+  for (let step = 0; step < MAX_STEPS; step += 1) {
+    const stream = active.transport.stream({
+      model: active.model,
+      system: SYSTEM,
+      messages: history,
+      tools: AGENT_TOOLS,
+      maxTokens: MAX_TOKENS,
+      signal: controller?.signal ?? new AbortController().signal
+    })
+
+    stream.onText((delta) => emit({ type: 'text', delta }))
+
+    const message = await stream.finalMessage()
+
+    const used = message.usage.input_tokens || overhead() + estimateTokens(history)
+
+    recordUsage(used)
+    emit({ type: 'usage', tokens: used, limit: contextWindow(active.model) })
+
+    history.push({ role: 'assistant', content: message.content })
+    record('assistant', message.content)
+
+    if (message.stop_reason !== 'tool_use') {
+      emit({ type: 'message', text: textOf(message) })
+      return true
+    }
+
+    const calls = message.content.filter(
+      (block): block is Anthropic.ToolUseBlock => block.type === 'tool_use'
+    )
+    const results = await resolveCalls(calls, emit)
+
+    history.push({ role: 'user', content: results })
+    record('user', results)
+  }
+
+  return false
+}
+
 export async function runTurn(prompt: string, emit: (event: ChatEvent) => void): Promise<void> {
   emit({ type: 'start' })
 
@@ -100,43 +230,29 @@ export async function runTurn(prompt: string, emit: (event: ChatEvent) => void):
     if (!currentSession()) startSession()
 
     controller = new AbortController()
+    await compact(active, emit)
     history.push({ role: 'user', content: prompt })
     record('user', prompt)
     emit({ type: 'session', id: currentSession() })
 
-    for (let step = 0; step < MAX_STEPS; step += 1) {
-      const stream = active.transport.stream({
-        model: active.model,
-        system: SYSTEM,
-        messages: history,
-        tools: AGENT_TOOLS,
-        maxTokens: MAX_TOKENS,
-        signal: controller.signal
-      })
+    let finished = false
 
-      stream.onText((delta) => emit({ type: 'text', delta }))
+    try {
+      finished = await attempt(active, emit)
+    } catch (error) {
+      if (!overLimit(error instanceof Error ? error.message : String(error))) throw error
 
-      const message = await stream.finalMessage()
-
-      history.push({ role: 'assistant', content: message.content })
-      record('assistant', message.content)
-
-      if (message.stop_reason !== 'tool_use') {
-        emit({ type: 'message', text: textOf(message) })
-        emit({ type: 'done' })
-        return
-      }
-
-      const calls = message.content.filter(
-        (block): block is Anthropic.ToolUseBlock => block.type === 'tool_use'
-      )
-      const results = await resolveCalls(calls, emit)
-
-      history.push({ role: 'user', content: results })
-      record('user', results)
+      emit({ type: 'text', delta: '' })
+      await compact(active, emit)
+      finished = await attempt(active, emit)
     }
 
-    emit({ type: 'error', message: 'The assistant used too many steps without finishing' })
+    if (!finished) {
+      emit({ type: 'error', message: 'The assistant used too many steps without finishing' })
+      return
+    }
+
+    emit({ type: 'done' })
   } catch (error) {
     emit({ type: 'error', message: error instanceof Error ? error.message : String(error) })
   } finally {

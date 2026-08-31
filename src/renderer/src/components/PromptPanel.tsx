@@ -71,6 +71,14 @@ function Message({ message }: { message: ChatMessage }) {
     )
   }
 
+  if (message.role === 'result') {
+    return <div className={styles.result}>{message.text}</div>
+  }
+
+  if (message.role === 'thinking') {
+    return <div className={styles.thinking}>{message.text}</div>
+  }
+
   if (message.role === 'error') {
     return <div className={styles.error}>{message.text}</div>
   }

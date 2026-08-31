@@ -31,7 +31,7 @@ export const BASE_URLS: Record<Exclude<ProviderId, 'anthropic'>, string> = {
   xai: 'https://api.x.ai/v1'
 }
 
-interface ActiveModel {
+export interface ActiveModel {
   transport: ModelTransport
   model: string
 }

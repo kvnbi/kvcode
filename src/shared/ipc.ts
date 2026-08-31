@@ -14,6 +14,7 @@ export const IpcChannel = {
   ChatSend: 'chat:send',
   ChatCancel: 'chat:cancel',
   ChatReset: 'chat:reset',
+  ChatUsage: 'chat:usage',
   SessionList: 'session:list',
   SessionOpen: 'session:open',
   SessionCreate: 'session:create',

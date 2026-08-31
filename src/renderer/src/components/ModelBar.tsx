@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
-import { modelLabel } from '@shared/models'
+import { contextWindow, formatTokens, modelLabel } from '@shared/models'
+import { useChatStore } from '@renderer/state/chatStore'
 import { useSettingsStore } from '@renderer/state/settingsStore'
 import styles from './ModelBar.module.css'
+
+const COMPACT_AT = 0.7
 
 type Menu = 'model' | null
 
@@ -10,6 +13,7 @@ export function ModelBar() {
   const models = useSettingsStore((state) => state.models)
   const load = useSettingsStore((state) => state.load)
   const update = useSettingsStore((state) => state.update)
+  const usage = useChatStore((state) => state.usage)
   const [menu, setMenu] = useState<Menu>(null)
 
   useEffect(() => {
@@ -17,6 +21,9 @@ export function ModelBar() {
   }, [load])
 
   if (!settings) return null
+
+  const limit = usage?.limit ?? contextWindow(settings.model)
+  const tokens = usage?.tokens ?? 0
 
   const options = models.includes(settings.model) ? models : [settings.model, ...models]
 
@@ -51,6 +58,12 @@ export function ModelBar() {
         </button>
       </div>
 
+      <span
+        className={tokens / limit >= COMPACT_AT ? `${styles.usage} ${styles.usageHigh}` : styles.usage}
+        title={`${tokens.toLocaleString()} of ${limit.toLocaleString()} context tokens used`}
+      >
+        {`${formatTokens(tokens)} / ${formatTokens(limit)}`}
+      </span>
     </div>
   )
 }

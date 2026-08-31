@@ -1,6 +1,7 @@
 import { appendFileSync, chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { app, shell } from 'electron'
+import { parseEntries } from '@shared/sessions'
 import type { SessionEntry, SessionSummary } from '@shared/sessions'
 
 const INDEX = 'index.json'
@@ -54,15 +55,13 @@ export function currentSession(): string {
 export function readSession(id: string): SessionEntry[] {
   if (!existsSync(fileFor(id))) return []
 
-  return readFileSync(fileFor(id), 'utf8')
-    .split('\n')
-    .filter(Boolean)
-    .map((line) => JSON.parse(line) as SessionEntry)
+  return parseEntries(readFileSync(fileFor(id), 'utf8'))
 }
 
 export function openSession(id: string): SessionEntry[] {
+  const entries = readSession(id)
   currentId = id
-  return readSession(id)
+  return entries
 }
 
 export async function deleteSession(id: string): Promise<void> {
@@ -76,6 +75,24 @@ export async function deleteSession(id: string): Promise<void> {
 export function renameSession(id: string, title: string): void {
   const trimmed = title.trim()
   writeIndex(readIndex().map((s) => (s.id === id ? { ...s, title: trimmed || s.title } : s)))
+}
+
+export function recordUsage(tokens: number): void {
+  if (!currentId || tokens <= 0) return
+
+  const sessions = readIndex()
+  const existing = sessions.find((session) => session.id === currentId)
+
+  if (!existing) return
+
+  existing.tokens = tokens
+  writeIndex(sessions)
+}
+
+export function sessionTokens(): number {
+  if (!currentId) return 0
+
+  return readIndex().find((session) => session.id === currentId)?.tokens ?? 0
 }
 
 export function appendEntry(entry: SessionEntry): void {

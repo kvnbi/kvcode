@@ -6,6 +6,15 @@
   padding-top: 2px;
 }
 
+.usage {
+  margin-left: auto;
+  flex: none;
+  padding-right: 2px;
+  color: var(--text-faint);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
 .slot {
   position: relative;
   display: flex;
@@ -73,4 +82,8 @@
 .itemOn {
   color: var(--text-primary);
   background-color: var(--surface-selected);
+}
+
+.usageHigh {
+  color: var(--text-warning, #d99a4e);
 }

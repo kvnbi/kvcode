@@ -2,6 +2,7 @@ import { join } from 'node:path'
 import { app, BrowserWindow, shell } from 'electron'
 
 const isMac = process.platform === 'darwin'
+const MOUNT_GRACE = 700
 
 function isExternalWebUrl(value: string): boolean {
   try {
@@ -35,6 +36,19 @@ export function createMainWindow(): BrowserWindow {
   })
 
   window.on('ready-to-show', () => window.show())
+
+  window.webContents.once('did-finish-load', () => {
+    setTimeout(() => {
+      if (window.isDestroyed()) return
+
+      window.webContents
+        .executeJavaScript('document.getElementById("root")?.childElementCount ?? 0')
+        .then((mounted: number) => {
+          if (mounted === 0 && !window.isDestroyed()) window.webContents.reload()
+        })
+        .catch(() => undefined)
+    }, MOUNT_GRACE)
+  })
 
   window.webContents.setWindowOpenHandler(({ url }) => {
     if (isExternalWebUrl(url)) shell.openExternal(url)
