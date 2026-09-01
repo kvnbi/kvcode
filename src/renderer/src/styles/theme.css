@@ -16,7 +16,8 @@
 
   --text-primary: var(--kv-silver-100);
   --text-secondary: var(--kv-silver-200);
-  --text-faint: var(--kv-silver-400);
+  --text-faint: var(--kv-silver-300);
+  --text-placeholder: var(--kv-silver-400);
   --text-accent: var(--kv-silver-300);
   --text-brand: var(--kv-silver-100);
 

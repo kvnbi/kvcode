@@ -66,3 +66,20 @@ export function PlusIcon({ size = 14, className }: IconProps) {
     </svg>
   )
 }
+
+export function CopyIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <rect x="5.5" y="5.5" width="8" height="8" rx="1.6" />
+      <path d="M10.5 5.5v-1a1.6 1.6 0 0 0-1.6-1.6H4.1A1.6 1.6 0 0 0 2.5 4.5v4.8a1.6 1.6 0 0 0 1.6 1.6h1" />
+    </svg>
+  )
+}
+
+export function ClipIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg {...base(size)} strokeWidth={1.2} className={className}>
+      <path d="M13.89 7.87l-6.13 6.13a4 4 0 0 1-5.66-5.66l6.13-6.13a2.67 2.67 0 0 1 3.77 3.77l-6.13 6.13a1.33 1.33 0 0 1-1.89-1.89l5.66-5.65" />
+    </svg>
+  )
+}

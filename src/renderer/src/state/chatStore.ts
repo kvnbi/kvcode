@@ -2,6 +2,10 @@ import { create } from 'zustand'
 import type { ChatEvent } from '@shared/chat'
 import { formatTokens } from '@shared/models'
 import type { SessionEntry, SessionSummary } from '@shared/sessions'
+import type { Attachment } from '@shared/attachments'
+import { MAX_ATTACHMENTS } from '@shared/attachments'
+import { unsupportedReason } from '@shared/models'
+import { useSettingsStore } from './settingsStore'
 import { useEditorStore } from './editorStore'
 import { usePermissionStore } from './permissionStore'
 
@@ -10,6 +14,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant' | 'tool' | 'result' | 'thinking' | 'error'
   text: string
   tool?: string
+  attachment?: { id: string; kind: string; name: string }
 }
 
 interface ChatState {
@@ -19,7 +24,10 @@ interface ChatState {
   streaming: string
   isRunning: boolean
   usage: number | null
+  attachments: Attachment[]
   send: (prompt: string) => Promise<void>
+  addAttachments: (next: Attachment[]) => void
+  removeAttachment: (id: string) => void
   cancel: () => Promise<void>
   refreshSessions: () => Promise<void>
   refreshUsage: () => Promise<void>
@@ -36,9 +44,14 @@ function nextId(): string {
   return `m${counter}`
 }
 
-function append(role: ChatMessage['role'], text: string, tool?: string) {
+function append(
+  role: ChatMessage['role'],
+  text: string,
+  tool?: string,
+  attachment?: ChatMessage['attachment']
+) {
   useChatStore.setState((state) => ({
-    messages: [...state.messages, { id: nextId(), role, text, tool }]
+    messages: [...state.messages, { id: nextId(), role, text, tool, attachment }]
   }))
 }
 
@@ -89,8 +102,19 @@ function toMessages(entries: SessionEntry[]): ChatMessage[] {
     if (!Array.isArray(entry.content)) continue
 
     for (const block of entry.content as StoredBlock[]) {
+      if (block.type === 'image' || block.type === 'document') {
+        const ref = block as { kvId?: string }
+        messages.push({
+          id: nextId(),
+          role: 'user',
+          text: block.type,
+          attachment: { id: ref.kvId ?? '', kind: block.type === 'image' ? 'image' : 'document', name: block.type === 'image' ? 'Image' : 'PDF' }
+        })
+        continue
+      }
+
       if (block.type === 'text' && block.text) {
-        messages.push({ id: nextId(), role: 'assistant', text: block.text })
+        messages.push({ id: nextId(), role: entry.role === 'user' ? 'user' : 'assistant', text: block.text })
         continue
       }
 
@@ -140,15 +164,54 @@ export const useChatStore = create<ChatState>((set, get) => ({
   streaming: '',
   isRunning: false,
   usage: null,
+  attachments: [],
+
+  addAttachments: (next) => {
+    set((state) => {
+      const seen = new Set(state.attachments.map((item) => item.id))
+      const merged = [...state.attachments]
+
+      for (const item of next) {
+        if (seen.has(item.id) || merged.length >= MAX_ATTACHMENTS) continue
+        seen.add(item.id)
+        merged.push(item)
+      }
+
+      return { attachments: merged }
+    })
+  },
+
+  removeAttachment: (id) => {
+    set((state) => ({ attachments: state.attachments.filter((item) => item.id !== id) }))
+  },
 
   send: async (prompt) => {
-    if (get().isRunning || prompt.trim().length === 0) return
+    const attachments = get().attachments
 
-    append('user', prompt.trim())
-    set({ isRunning: true, streaming: '' })
+    if (get().isRunning) return
+    if (prompt.trim().length === 0 && attachments.length === 0) return
+
+    const model = useSettingsStore.getState().settings?.model ?? ''
+
+    for (const item of attachments) {
+      const reason = unsupportedReason(model, item.kind)
+
+      if (reason) {
+        append('error', `${reason}. Remove ${item.name} or pick another model.`)
+        return
+      }
+    }
+
+    for (const item of attachments) {
+      append('user', item.name, undefined, { id: item.id, kind: item.kind, name: item.name })
+    }
+
+    if (prompt.trim().length > 0) append('user', prompt.trim())
+
+    set({ isRunning: true, streaming: '', attachments: [] })
 
     try {
-      await window.kvcode.sendChat(prompt.trim())
+      await window.kvcode.sendChat(prompt.trim(), attachments)
     } catch (error) {
       append('error', reason(error))
       set({ isRunning: false, streaming: '' })

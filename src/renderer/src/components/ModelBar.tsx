@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { contextWindow, formatTokens, modelLabel } from '@shared/models'
 import { useChatStore } from '@renderer/state/chatStore'
+import { ClipIcon } from './Icons'
 import { useSettingsStore } from '@renderer/state/settingsStore'
 import styles from './ModelBar.module.css'
 
@@ -14,6 +15,7 @@ export function ModelBar() {
   const load = useSettingsStore((state) => state.load)
   const update = useSettingsStore((state) => state.update)
   const usage = useChatStore((state) => state.usage)
+  const addAttachments = useChatStore((state) => state.addAttachments)
   const [menu, setMenu] = useState<Menu>(null)
 
   useEffect(() => {
@@ -31,6 +33,15 @@ export function ModelBar() {
   return (
     <div className={styles.bar}>
       {menu ? <div className={styles.backdrop} onClick={() => setMenu(null)} /> : null}
+
+      <button
+        type="button"
+        className={styles.clip}
+        title="Attach files"
+        onClick={() => void window.kvcode.attachPick().then(addAttachments)}
+      >
+        <ClipIcon size={14} />
+      </button>
 
       <div className={styles.slot}>
         {menu === 'model' ? (

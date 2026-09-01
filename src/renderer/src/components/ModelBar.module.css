@@ -3,11 +3,10 @@
   align-items: center;
   gap: 6px;
   flex: none;
-  padding-top: 2px;
+  padding-top: 1px;
 }
 
 .usage {
-  margin-left: auto;
   flex: none;
   padding-right: 2px;
   color: var(--text-faint);
@@ -19,6 +18,27 @@
   position: relative;
   display: flex;
   min-width: 0;
+  margin-left: auto;
+}
+
+.clip {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: var(--radius-row);
+  corner-shape: var(--corner);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.clip:hover {
+  color: var(--text-primary);
+  background-color: var(--surface-hover);
 }
 
 .button {
@@ -48,7 +68,7 @@
 .menu {
   position: absolute;
   bottom: 28px;
-  left: 0;
+  right: 0;
   z-index: 6;
   display: flex;
   flex-direction: column;

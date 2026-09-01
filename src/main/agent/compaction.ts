@@ -7,6 +7,8 @@ const SUMMARY_INPUT_CHARS = 60000
 const MIN_SUMMARY_CHARS = 2000
 const MAX_SQUEEZE_CHARS = 4000
 const MIN_SQUEEZE_CHARS = 100
+const IMAGE_TOKENS = 1600
+const DOCUMENT_TOKENS = 3000
 
 type Message = Anthropic.MessageParam
 
@@ -17,11 +19,31 @@ export function estimateText(text: string): number {
 export function estimateTokens(messages: Message[]): number {
   if (messages.length === 0) return 0
 
-  return estimateText(JSON.stringify(messages))
+  let media = 0
+
+  for (const message of messages) {
+    if (!Array.isArray(message.content)) continue
+
+    for (const block of message.content) {
+      if (block.type === 'image') media += IMAGE_TOKENS
+      if (block.type === 'document') media += DOCUMENT_TOKENS
+    }
+  }
+
+  const body = JSON.stringify(messages, (key, value) =>
+    key === 'data' && typeof value === 'string' ? '' : value
+  )
+
+  return estimateText(body) + media
 }
 
 export function isTurnStart(message: Message): boolean {
-  return message.role === 'user' && typeof message.content === 'string'
+  if (message.role !== 'user') return false
+  if (typeof message.content === 'string') return true
+
+  return (
+    Array.isArray(message.content) && !message.content.some((block) => block.type === 'tool_result')
+  )
 }
 
 export function safeCutIndex(messages: Message[], keepRecent = KEEP_RECENT): number {

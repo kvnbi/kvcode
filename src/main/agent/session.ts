@@ -12,6 +12,9 @@ import {
 } from '../services/conversations'
 import { AGENT_TOOLS, WRITING_TOOLS, runTool } from './tools'
 import { listRoots } from '../services/workspace'
+import { grantRead } from '../services/permissions'
+import { idForData, readAttachment } from '../services/attachments'
+import type { Attachment } from '@shared/attachments'
 import {
   charsFor,
   estimateText,
@@ -59,7 +62,7 @@ export function loadSession(id: string): void {
   history.length = 0
 
   for (const entry of entries.slice(marker === -1 ? 0 : marker)) {
-    history.push({ role: entry.role, content: entry.content } as Anthropic.MessageParam)
+    history.push({ role: entry.role, content: hydrate(entry.content) } as Anthropic.MessageParam)
   }
 }
 
@@ -67,6 +70,70 @@ function overhead(): number {
   if (baseline === 0) baseline = estimateText(SYSTEM) + estimateText(JSON.stringify(AGENT_TOOLS))
 
   return baseline
+}
+
+type Block = Anthropic.ContentBlockParam
+
+function attachmentBlocks(attachments: Attachment[]): Block[] {
+  const blocks: Block[] = []
+
+  for (const item of attachments) {
+    if (item.kind === 'text' && item.path) {
+      grantRead(item.path)
+      blocks.push({ type: 'text', text: `Attached file: ${item.path}` })
+      continue
+    }
+
+    const data = readAttachment(item.id)
+
+    if (!data) continue
+
+    if (item.kind === 'image') {
+      blocks.push({
+        type: 'image',
+        source: { type: 'base64', media_type: item.mediaType as 'image/png', data }
+      })
+      continue
+    }
+
+    blocks.push({
+      type: 'document',
+      source: { type: 'base64', media_type: 'application/pdf', data }
+    })
+  }
+
+  return blocks
+}
+
+function hydrate(content: unknown): unknown {
+  if (!Array.isArray(content)) return content
+
+  return content.map((block) => {
+    const { kvId, ...item } = block as { type?: string; source?: { data?: string }; kvId?: string }
+
+    if (item.type !== 'image' && item.type !== 'document') return block
+    if (item.source?.data) return item
+    if (!kvId) return { type: 'text', text: '[attachment unavailable]' }
+
+    const data = readAttachment(kvId)
+
+    if (!data) return { type: 'text', text: '[attachment unavailable]' }
+
+    return { ...item, source: { ...item.source, data } }
+  })
+}
+
+function dehydrate(content: unknown): unknown {
+  if (!Array.isArray(content)) return content
+
+  return content.map((block) => {
+    const item = block as { type?: string; source?: { data?: string } }
+
+    if (item.type !== 'image' && item.type !== 'document') return block
+    if (!item.source?.data) return block
+
+    return { ...item, kvId: idForData(item.source.data), source: { ...item.source, data: '' } }
+  })
 }
 
 export function sessionUsage(): number {
@@ -90,7 +157,7 @@ function textOf(message: Anthropic.Message): string {
 }
 
 function record(role: 'user' | 'assistant', content: unknown, compacted = false): void {
-  appendEntry({ role, content, at: new Date().toISOString(), compacted })
+  appendEntry({ role, content: dehydrate(content), at: new Date().toISOString(), compacted })
 }
 
 function overLimit(message: string): boolean {
@@ -231,7 +298,11 @@ async function attempt(active: ActiveModel, emit: (event: ChatEvent) => void): P
   return false
 }
 
-export async function runTurn(prompt: string, emit: (event: ChatEvent) => void): Promise<void> {
+export async function runTurn(
+  prompt: string,
+  attachments: Attachment[],
+  emit: (event: ChatEvent) => void
+): Promise<void> {
   emit({ type: 'start' })
 
   try {
@@ -241,8 +312,13 @@ export async function runTurn(prompt: string, emit: (event: ChatEvent) => void):
 
     controller = new AbortController()
     await compact(active, emit)
-    history.push({ role: 'user', content: prompt })
-    record('user', prompt)
+
+    const blocks = attachmentBlocks(attachments)
+    const content: Anthropic.MessageParam['content'] =
+      blocks.length > 0 ? [...blocks, { type: 'text', text: prompt }] : prompt
+
+    history.push({ role: 'user', content })
+    record('user', content)
     emit({ type: 'session', id: currentSession() })
 
     let finished = false

@@ -107,8 +107,8 @@
   display: flex;
   flex-direction: column;
   flex: none;
-  gap: 10px;
-  padding: 14px 32px 12px;
+  gap: 8px;
+  padding: 14px 32px 9px;
   border-top: 1px solid var(--border-soft);
 }
 
@@ -210,7 +210,7 @@
 }
 
 .input::placeholder {
-  color: var(--text-faint);
+  color: var(--text-placeholder);
 }
 
 .input:disabled {
@@ -248,4 +248,102 @@
   line-height: 1.55;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+
+
+
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 0 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 220px;
+  padding: 3px 5px 3px 9px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-row);
+  corner-shape: var(--corner);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chipBad {
+  border-color: var(--text-danger, #e06c5c);
+  color: var(--text-danger, #e06c5c);
+}
+
+.chipX {
+  display: flex;
+  flex: none;
+  padding: 2px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.chipX:hover {
+  background-color: var(--surface-hover);
+}
+
+.shot {
+  align-self: flex-end;
+  max-width: 260px;
+  max-height: 220px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-row);
+  corner-shape: var(--corner);
+  object-fit: contain;
+}
+
+.file {
+  align-self: flex-end;
+  padding: 6px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-row);
+  corner-shape: var(--corner);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+}
+
+.assistant {
+  position: relative;
+}
+
+.assistant:hover .copy {
+  opacity: 1;
+}
+
+.copy {
+  position: absolute;
+  top: -2px;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-row);
+  corner-shape: var(--corner);
+  background-color: var(--surface-panel);
+  color: var(--text-faint);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.copy:hover {
+  color: var(--text-secondary);
 }

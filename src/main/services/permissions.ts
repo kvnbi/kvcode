@@ -17,6 +17,10 @@ function covers(grants: Set<string>, target: string): boolean {
   return false
 }
 
+export function grantRead(target: string): void {
+  readGrants.add(target)
+}
+
 export function isPathGranted(target: string, kind: PermissionKind): boolean {
   if (kind === 'write') return covers(writeGrants, target)
 

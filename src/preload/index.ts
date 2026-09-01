@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import type { ChatEvent, ChatSettings } from '@shared/chat'
 import type { PermissionReply, PermissionRequest } from '@shared/permissions'
 import type { SessionEntry, SessionSummary } from '@shared/sessions'
@@ -6,6 +6,7 @@ import type { FileChange } from '@shared/changes'
 import type { TerminalChunk, TerminalSnapshot } from '@shared/terminals'
 import type { ProviderId } from '@shared/providers'
 import { IpcChannel } from '@shared/ipc'
+import type { Attachment } from '@shared/attachments'
 import type { FileContent, FileNode, IpcResult, Workspace } from '@shared/types'
 
 async function unwrap<T>(channel: string, ...args: unknown[]): Promise<T> {
@@ -33,11 +34,17 @@ const api = {
   writeApiKey: (provider: ProviderId, value: string) =>
     unwrap<ChatSettings>(IpcChannel.WriteApiKey, provider, value),
   clearApiKey: (provider: ProviderId) => unwrap<ChatSettings>(IpcChannel.ClearApiKey, provider),
-  sendChat: (prompt: string) => unwrap<null>(IpcChannel.ChatSend, prompt),
+  sendChat: (prompt: string, attachments: Attachment[]) =>
+    unwrap<null>(IpcChannel.ChatSend, prompt, attachments),
   cancelChat: () => unwrap<null>(IpcChannel.ChatCancel),
   resetChat: () => unwrap<null>(IpcChannel.ChatReset),
   listSessions: () => unwrap<SessionSummary[]>(IpcChannel.SessionList),
   chatUsage: () => unwrap<number>(IpcChannel.ChatUsage),
+  attachPaths: (paths: string[]) => unwrap<Attachment[]>(IpcChannel.AttachPaths, paths),
+  attachBytes: (name: string, data: string) => unwrap<Attachment>(IpcChannel.AttachBytes, name, data),
+  attachPick: () => unwrap<Attachment[]>(IpcChannel.AttachPick),
+  attachRead: (id: string) => unwrap<string>(IpcChannel.AttachRead, id),
+  pathForFile: (file: File) => webUtils.getPathForFile(file),
   openSession: (id: string) => unwrap<SessionEntry[]>(IpcChannel.SessionOpen, id),
   createSession: () => unwrap<null>(IpcChannel.SessionCreate),
   deleteSession: (id: string) => unwrap<null>(IpcChannel.SessionDelete, id),

@@ -105,3 +105,21 @@ export function formatTokens(count: number): string {
 
   return String(rounded)
 }
+
+const NO_IMAGES = /^deepseek-/
+const DOCUMENTS = /^(claude-|gpt-5)/
+
+export function supportsImages(model: string): boolean {
+  return !NO_IMAGES.test(model)
+}
+
+export function supportsDocuments(model: string): boolean {
+  return DOCUMENTS.test(model)
+}
+
+export function unsupportedReason(model: string, kind: 'image' | 'document' | 'text'): string {
+  if (kind === 'image' && !supportsImages(model)) return `${modelLabel(model)} cannot read images`
+  if (kind === 'document' && !supportsDocuments(model)) return `${modelLabel(model)} cannot read PDFs`
+
+  return ''
+}

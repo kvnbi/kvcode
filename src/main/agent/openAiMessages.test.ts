@@ -75,3 +75,54 @@ test('an empty user message is not forwarded', () => {
   const out = toMessages(SYSTEM, [{ role: 'user', content: [] }])
   assert.deepEqual(out.map((m) => m.role), ['system'])
 })
+
+test('an image becomes an image_url part for openai compatible providers', () => {
+  const out = toMessages(SYSTEM, [
+    { role: 'user', content: [
+      { type: 'image', source: { type: 'base64', media_type: 'image/png', data: 'AAA' } },
+      { type: 'text', text: 'what is this' }
+    ] }
+  ])
+  const parts = out[1].content as { type: string; image_url?: { url: string } }[]
+  assert.equal(parts[0].type, 'image_url')
+  assert.equal(parts[0].image_url?.url, 'data:image/png;base64,AAA')
+  assert.equal(parts[1].type, 'text')
+})
+
+test('a jpeg keeps its own media type in the data url', () => {
+  const out = toMessages(SYSTEM, [
+    { role: 'user', content: [
+      { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: 'BBB' } }
+    ] }
+  ])
+  const parts = out[1].content as { image_url?: { url: string } }[]
+  assert.ok(parts[0].image_url?.url.startsWith('data:image/jpeg;base64,'))
+})
+
+test('a pdf becomes a file part', () => {
+  const out = toMessages(SYSTEM, [
+    { role: 'user', content: [
+      { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: 'CCC' } },
+      { type: 'text', text: 'summarise' }
+    ] }
+  ])
+  const parts = out[1].content as { type: string }[]
+  assert.equal(parts[0].type, 'file')
+})
+
+test('an image with no data is skipped rather than sent empty', () => {
+  const out = toMessages(SYSTEM, [
+    { role: 'user', content: [
+      { type: 'image', source: { type: 'base64', media_type: 'image/png', data: '' } },
+      { type: 'text', text: 'still here' }
+    ] }
+  ])
+  const parts = out[1].content as { type: string }[]
+  assert.equal(parts.length, 1)
+  assert.equal(parts[0].type, 'text')
+})
+
+test('a text only message stays a plain string', () => {
+  const out = toMessages(SYSTEM, [{ role: 'user', content: [{ type: 'text', text: 'hello' }] }])
+  assert.equal(out[1].content, 'hello')
+})

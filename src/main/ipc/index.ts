@@ -6,6 +6,8 @@ import type { SessionEntry, SessionSummary } from '@shared/sessions'
 import type { FileChange } from '@shared/changes'
 import type { TerminalSnapshot } from '@shared/terminals'
 import type { ProviderId } from '@shared/providers'
+import type { Attachment } from '@shared/attachments'
+import { MAX_ATTACHMENTS } from '@shared/attachments'
 import type { FileContent, FileNode, IpcResult, Workspace } from '@shared/types'
 import { cancelTurn, loadSession, resetSession, runTurn, sessionUsage } from '../agent/session'
 import { setDirtyPaths } from '../agent/tools'
@@ -17,6 +19,7 @@ import {
 } from '../services/conversations'
 import { clearChanges, listChanges, revertChange } from '../services/changes'
 import { forgetModels, listModels } from '../services/models'
+import { attachBytes, attachPath, readAttachment } from '../services/attachments'
 import { settlePermission } from '../services/permissions'
 import {
   closeTerminal,
@@ -144,6 +147,26 @@ export function registerIpcHandlers(): void {
     return null
   })
 
+  handle<Attachment[]>(IpcChannel.AttachPaths, async (paths: string[]) =>
+    paths.slice(0, MAX_ATTACHMENTS).map(attachPath)
+  )
+
+  handle<Attachment>(IpcChannel.AttachBytes, async (name: string, data: string) =>
+    attachBytes(name, data)
+  )
+
+  handle<Attachment[]>(IpcChannel.AttachPick, async () => {
+    const window = BrowserWindow.getFocusedWindow()
+    const options = { properties: ['openFile' as const, 'multiSelections' as const] }
+    const result = window
+      ? await dialog.showOpenDialog(window, options)
+      : await dialog.showOpenDialog(options)
+
+    return result.canceled ? [] : result.filePaths.slice(0, MAX_ATTACHMENTS).map(attachPath)
+  })
+
+  handle<string>(IpcChannel.AttachRead, async (id: string) => readAttachment(id))
+
   handle<number>(IpcChannel.ChatUsage, async () => sessionUsage())
 
   handle<SessionSummary[]>(IpcChannel.SessionList, async () => listSessions())
@@ -201,12 +224,12 @@ export function registerIpcHandlers(): void {
     return null
   })
 
-  ipcMain.handle(IpcChannel.ChatSend, async (event, prompt: string) => {
+  ipcMain.handle(IpcChannel.ChatSend, async (event, prompt: string, attachments: Attachment[] = []) => {
     const send = (payload: ChatEvent) => {
       if (!event.sender.isDestroyed()) event.sender.send(IpcChannel.ChatEvent, payload)
     }
 
-    await runTurn(prompt, send)
+    await runTurn(prompt, attachments, send)
     return { ok: true, value: null }
   })
 }

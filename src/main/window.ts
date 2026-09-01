@@ -3,6 +3,7 @@ import { app, BrowserWindow, shell } from 'electron'
 
 const isMac = process.platform === 'darwin'
 const MOUNT_GRACE = 700
+const MOUNT_RETRIES = 4
 
 function isExternalWebUrl(value: string): boolean {
   try {
@@ -37,14 +38,19 @@ export function createMainWindow(): BrowserWindow {
 
   window.on('ready-to-show', () => window.show())
 
-  window.webContents.once('did-finish-load', () => {
+  let retries = 0
+
+  window.webContents.on('did-finish-load', () => {
     setTimeout(() => {
-      if (window.isDestroyed()) return
+      if (window.isDestroyed() || retries >= MOUNT_RETRIES) return
 
       window.webContents
         .executeJavaScript('document.getElementById("root")?.childElementCount ?? 0')
         .then((mounted: number) => {
-          if (mounted === 0 && !window.isDestroyed()) window.webContents.reload()
+          if (mounted > 0 || window.isDestroyed()) return
+
+          retries += 1
+          window.webContents.reload()
         })
         .catch(() => undefined)
     }, MOUNT_GRACE)
@@ -59,9 +65,13 @@ export function createMainWindow(): BrowserWindow {
     if (url !== window.webContents.getURL()) event.preventDefault()
   })
 
-  window.webContents.session.setPermissionRequestHandler((_contents, _permission, callback) => {
-    callback(false)
+  window.webContents.session.setPermissionRequestHandler((_contents, permission, callback) => {
+    callback(permission === 'clipboard-sanitized-write')
   })
+
+  window.webContents.session.setPermissionCheckHandler(
+    (_contents, permission) => permission === 'clipboard-sanitized-write'
+  )
 
   const devServerUrl = process.env['ELECTRON_RENDERER_URL']
 

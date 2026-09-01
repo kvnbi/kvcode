@@ -33,8 +33,20 @@ function writeIndex(sessions: SessionSummary[]): void {
   chmodSync(target, 0o600)
 }
 
+function textOf(content: unknown): string {
+  if (typeof content === 'string') return content
+
+  if (!Array.isArray(content)) return ''
+
+  return content
+    .map((block) => block as { type?: string; text?: string })
+    .filter((block) => block.type === 'text' && typeof block.text === 'string')
+    .map((block) => block.text as string)
+    .join(' ')
+}
+
 function titleFrom(content: unknown): string {
-  const text = typeof content === 'string' ? content.trim() : ''
+  const text = textOf(content).trim()
   if (text.length === 0) return 'New chat'
   return text.length > TITLE_LIMIT ? `${text.slice(0, TITLE_LIMIT)}...` : text
 }

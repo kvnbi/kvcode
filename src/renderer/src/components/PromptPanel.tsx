@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
-import type { KeyboardEvent } from 'react'
+import type { ClipboardEvent, DragEvent, KeyboardEvent } from 'react'
 import { looksRisky } from '@shared/permissions'
+import type { Attachment } from '@shared/attachments'
+import { unsupportedReason } from '@shared/models'
+import { useSettingsStore } from '@renderer/state/settingsStore'
 import type { PermissionRequest } from '@shared/permissions'
 import { useChatStore } from '@renderer/state/chatStore'
 import type { ChatMessage } from '@renderer/state/chatStore'
 import { usePermissionStore } from '@renderer/state/permissionStore'
+import { CloseIcon, CopyIcon } from './Icons'
 import { Markdown } from './Markdown'
 import { ModelBar } from './ModelBar'
 import { Panel } from './Panel'
@@ -58,6 +62,10 @@ function Request({ request }: { request: PermissionRequest }) {
 }
 
 function Message({ message }: { message: ChatMessage }) {
+  if (message.attachment) {
+    return <AttachmentBubble attachment={message.attachment} />
+  }
+
   if (message.role === 'user') {
     return <div className={styles.user}>{message.text}</div>
   }
@@ -83,7 +91,54 @@ function Message({ message }: { message: ChatMessage }) {
     return <div className={styles.error}>{message.text}</div>
   }
 
-  return <Markdown text={message.text} />
+  return (
+    <div className={styles.assistant}>
+      <Markdown text={message.text} />
+      <CopyButton text={message.text} />
+    </div>
+  )
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [done, setDone] = useState(false)
+
+  return (
+    <button
+      type="button"
+      className={styles.copy}
+      title={done ? 'Copied' : 'Copy'}
+      onClick={() => {
+        void navigator.clipboard.writeText(text)
+        setDone(true)
+        setTimeout(() => setDone(false), 1200)
+      }}
+    >
+      <CopyIcon size={12} />
+      {done ? 'Copied' : 'Copy'}
+    </button>
+  )
+}
+
+function AttachmentBubble({ attachment }: { attachment: NonNullable<ChatMessage['attachment']> }) {
+  const [source, setSource] = useState('')
+
+  useEffect(() => {
+    if (attachment.kind !== 'image' || !attachment.id) return
+
+    let live = true
+
+    void window.kvcode.attachRead(attachment.id).then((data) => {
+      if (live && data) setSource(`data:image/png;base64,${data}`)
+    })
+
+    return () => {
+      live = false
+    }
+  }, [attachment.id, attachment.kind])
+
+  if (source) return <img className={styles.shot} src={source} alt={attachment.name} />
+
+  return <div className={styles.file}>{attachment.name}</div>
 }
 
 const MAX_COMPOSER_HEIGHT = 168
@@ -94,6 +149,7 @@ function Composer({ blocked }: { blocked: boolean }) {
   const isRunning = useChatStore((state) => state.isRunning)
   const send = useChatStore((state) => state.send)
   const cancel = useChatStore((state) => state.cancel)
+  const addAttachments = useChatStore((state) => state.addAttachments)
 
   useEffect(() => {
     const node = area.current
@@ -124,6 +180,24 @@ function Composer({ blocked }: { blocked: boolean }) {
     void send(text)
   }
 
+  async function onPaste(event: ClipboardEvent<HTMLTextAreaElement>) {
+    const files = [...event.clipboardData.files]
+
+    if (files.length === 0) return
+
+    event.preventDefault()
+    addAttachments(await ingest(files))
+  }
+
+  async function onDrop(event: DragEvent<HTMLTextAreaElement>) {
+    const files = [...event.dataTransfer.files]
+
+    if (files.length === 0) return
+
+    event.preventDefault()
+    addAttachments(await ingest(files))
+  }
+
   return (
     <textarea
       ref={area}
@@ -134,9 +208,69 @@ function Composer({ blocked }: { blocked: boolean }) {
       placeholder={isRunning ? 'Enter to stop' : 'Message'}
       onChange={(event) => setDraft(event.target.value)}
       onKeyDown={onKeyDown}
+      onPaste={(event) => void onPaste(event)}
+      onDragOver={(event) => event.preventDefault()}
+      onDrop={(event) => void onDrop(event)}
     />
   )
 }
+
+async function ingest(files: File[]): Promise<Attachment[]> {
+  const paths: string[] = []
+  const loose: File[] = []
+
+  for (const file of files) {
+    const path = window.kvcode.pathForFile(file)
+    if (path) paths.push(path)
+    else loose.push(file)
+  }
+
+  const out: Attachment[] = []
+
+  if (paths.length > 0) out.push(...(await window.kvcode.attachPaths(paths)))
+
+  for (const file of loose) {
+    const buffer = await file.arrayBuffer()
+    let binary = ''
+    const bytes = new Uint8Array(buffer)
+
+    for (let index = 0; index < bytes.length; index += 1) binary += String.fromCharCode(bytes[index])
+
+    out.push(await window.kvcode.attachBytes(file.name || 'pasted.png', btoa(binary)))
+  }
+
+  return out
+}
+
+function Attachments() {
+  const attachments = useChatStore((state) => state.attachments)
+  const remove = useChatStore((state) => state.removeAttachment)
+  const model = useSettingsStore((state) => state.settings?.model ?? '')
+
+  if (attachments.length === 0) return null
+
+  return (
+    <div className={styles.chips}>
+      {attachments.map((item) => {
+        const reason = unsupportedReason(model, item.kind)
+
+        return (
+          <span
+            key={item.id}
+            className={reason ? `${styles.chip} ${styles.chipBad}` : styles.chip}
+            title={reason || item.name}
+          >
+            {item.name}
+            <button type="button" className={styles.chipX} onClick={() => remove(item.id)}>
+              <CloseIcon size={9} />
+            </button>
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
 
 export function PromptPanel({ width }: { width?: number }) {
   const messages = useChatStore((state) => state.messages)
@@ -171,6 +305,7 @@ export function PromptPanel({ width }: { width?: number }) {
         )}
         <div className={styles.footer}>
           {request ? <Request request={request} /> : null}
+          <Attachments />
           <Composer blocked={Boolean(request)} />
           <ModelBar />
         </div>

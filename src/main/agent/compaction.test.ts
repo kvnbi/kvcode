@@ -219,3 +219,44 @@ test('a huge history collapses under a small window', () => {
   assert.ok(estimateTokens(out) <= 5000)
   assert.ok(out.length > 0)
 })
+
+const shot = (data: string): Anthropic.MessageParam => ({
+  role: 'user',
+  content: [
+    { type: 'image', source: { type: 'base64', media_type: 'image/png', data } },
+    { type: 'text', text: 'what is this' }
+  ]
+})
+
+test('an image is estimated by a flat cost, not by its byte length', () => {
+  const small = estimateTokens([shot('a'.repeat(1000))])
+  const large = estimateTokens([shot('a'.repeat(4000000))])
+  assert.equal(small, large)
+})
+
+test('an image costs far less than its base64 length suggests', () => {
+  assert.ok(estimateTokens([shot('a'.repeat(4000000))]) < 5000)
+})
+
+test('a message carrying an image still counts as a turn start', () => {
+  assert.equal(isTurnStart(shot('a')), true)
+})
+
+test('a tool result is still not a turn start', () => {
+  const message: Anthropic.MessageParam = {
+    role: 'user',
+    content: [{ type: 'tool_result', tool_use_id: 't1', content: 'out' }]
+  }
+  assert.equal(isTurnStart(message), false)
+})
+
+test('trimming keeps a turn that begins with an image', () => {
+  const messages: Anthropic.MessageParam[] = [
+    { role: 'user', content: 'old' },
+    { role: 'assistant', content: [{ type: 'text', text: 'z'.repeat(40000) }] },
+    shot('b'.repeat(200))
+  ]
+  const out = trimToBudget(messages, 3000)
+  assert.ok(estimateTokens(out) <= 3000)
+  assert.ok(Array.isArray(out[0].content))
+})
