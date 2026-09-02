@@ -17,22 +17,20 @@
 .newChat {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex: none;
   height: 30px;
-  margin: 8px;
-  padding: 0 10px;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-control);
+  margin: 0 8px 6px;
+  padding: 0 8px 0 12px;
+  border-radius: var(--radius-row);
   corner-shape: var(--corner);
-  color: var(--text-secondary);
+  color: var(--text-faint);
   font-size: var(--text-sm);
-  font-weight: 500;
 }
 
 .newChat:hover {
   color: var(--text-primary);
-  border-color: var(--border-strong);
+  background-color: var(--surface-hover);
 }
 
 .scroll {
@@ -43,9 +41,11 @@
   min-height: 0;
   padding: 0 8px 8px;
   overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .row {
+  position: relative;
   display: flex;
   align-items: center;
   border-radius: var(--radius-row);
@@ -56,17 +56,23 @@
   background-color: var(--surface-hover);
 }
 
-.rowOn,
-.rowOn:hover {
-  background-color: var(--surface-selected);
+.rowOn::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 2px;
+  background-color: var(--text-faint);
 }
 
 .title {
   flex: 1;
   min-width: 0;
   height: 30px;
-  padding: 0 8px;
-  color: var(--text-secondary);
+  padding: 0 8px 0 12px;
+  color: var(--text-placeholder);
   font-size: var(--text-sm);
   text-align: left;
   overflow: hidden;
@@ -74,8 +80,12 @@
   white-space: nowrap;
 }
 
-.row:hover .title,
-.rowOn .title {
+.row:hover .title {
+  color: var(--text-secondary);
+}
+
+.rowOn .title,
+.rowOn:hover .title {
   color: var(--text-primary);
 }
 
@@ -83,7 +93,7 @@
   flex: 1;
   min-width: 0;
   height: 28px;
-  padding: 0 8px;
+  padding: 0 8px 0 11px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-row);
   corner-shape: var(--corner);
@@ -128,7 +138,7 @@
   flex: none;
   height: 32px;
   margin: 0 8px 8px;
-  padding: 0 10px;
+  padding: 0 8px 0 12px;
   border-radius: var(--radius-row);
   corner-shape: var(--corner);
   color: var(--text-faint);
