@@ -54,3 +54,19 @@
   color: var(--text-primary);
   background-color: var(--surface-active);
 }
+
+@media (max-width: 640px) {
+  .brand {
+    display: none;
+  }
+
+  .toggles {
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .toggle {
+    padding: 0 8px;
+  }
+}

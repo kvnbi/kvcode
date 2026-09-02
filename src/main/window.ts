@@ -18,8 +18,8 @@ export function createMainWindow(): BrowserWindow {
   const window = new BrowserWindow({
     width: 1280,
     height: 800,
-    minWidth: 1100,
-    minHeight: 600,
+    minWidth: 380,
+    minHeight: 320,
     show: false,
     backgroundColor: isMac ? '#00000000' : '#1a1a1a',
     vibrancy: isMac ? 'under-window' : undefined,
