@@ -1,5 +1,6 @@
 import type Anthropic from '@anthropic-ai/sdk'
 import type { ProviderId } from '@shared/providers'
+import { PROVIDER_CHEAP } from '@shared/providers'
 import { readPreferences } from '../services/settings'
 import { readApiKey } from '../services/secrets'
 import { createDirectTransport } from './directTransport'
@@ -36,7 +37,7 @@ export interface ActiveModel {
   model: string
 }
 
-export function createTransport(): ActiveModel {
+export function createTransport(cheap = false): ActiveModel {
   const preferences = readPreferences()
 
   if (preferences.mode === 'proxy') {
@@ -45,7 +46,7 @@ export function createTransport(): ActiveModel {
 
   const provider = preferences.provider
   const apiKey = readApiKey(provider)
-  const model = preferences.models[provider]
+  const model = cheap ? PROVIDER_CHEAP[provider] : preferences.models[provider]
   const override = process.env.KVCODE_BASE_URL ?? ''
 
   if (!apiKey) {

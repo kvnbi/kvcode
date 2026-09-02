@@ -5,7 +5,9 @@ import type { ChatEvent } from '@shared/chat'
 import {
   appendEntry,
   currentSession,
+  isNamed,
   openSession,
+  setTitle,
   recordUsage,
   sessionTokens,
   startSession
@@ -15,10 +17,12 @@ import { listRoots } from '../services/workspace'
 import { grantRead } from '../services/permissions'
 import { idForData, readAttachment } from '../services/attachments'
 import { toolSummary } from '@shared/toolText'
+import { cleanTitle } from '@shared/titleText'
 import type { Attachment } from '@shared/attachments'
 import {
   charsFor,
   estimateText,
+  isTurnStart,
   estimateTokens,
   pruneHistory,
   safeCutIndex,
@@ -34,6 +38,8 @@ const MAX_STEPS = 40
 const COMPACT_AT = 0.7
 const SUMMARY_INPUT = 0.5
 const MIN_BUDGET = 1000
+const TITLE_TOKENS = 20
+const TITLE_INPUT = 1000
 const SUMMARY_TOKENS = 2000
 const CONTEXT_ERRORS = ['context length', 'context_length', 'too long', 'maximum context', 'prompt is too long']
 
@@ -299,6 +305,55 @@ async function attempt(active: ActiveModel, emit: (event: ChatEvent) => void): P
   return false
 }
 
+const TITLE_SYSTEM = [
+  'You name coding conversations. Reply with the title and nothing else.',
+  'Three to six words. Name the specific file, tool, or problem involved.',
+  'Sentence case. No quotes, no trailing punctuation, no Title prefix.',
+  'Keep it under 45 characters.',
+  'Name the subject, do not describe the conversation.'
+].join(' ')
+
+function firstText(content: Anthropic.MessageParam['content']): string {
+  if (typeof content === 'string') return content
+
+  return content
+    .filter((block) => block.type === 'text')
+    .map((block) => (block as Anthropic.TextBlockParam).text)
+    .join(' ')
+}
+
+async function nameSession(id: string): Promise<void> {
+  if (!id || isNamed(id)) return
+  if (history.filter(isTurnStart).length !== 1) return
+
+  const opening = history.find((message) => message.role === 'user')
+  const reply = history.find((message) => message.role === 'assistant')
+
+  if (!opening) return
+
+  const prompt = [
+    'First message:',
+    firstText(opening.content).slice(0, TITLE_INPUT),
+    '',
+    'First reply:',
+    firstText(reply?.content ?? '').slice(0, TITLE_INPUT)
+  ].join('\n')
+
+  const active = createTransport(true)
+  const stream = active.transport.stream({
+    model: active.model,
+    system: TITLE_SYSTEM,
+    messages: [{ role: 'user', content: prompt }],
+    tools: [],
+    maxTokens: TITLE_TOKENS,
+    signal: new AbortController().signal
+  })
+
+  const title = cleanTitle(textOf(await stream.finalMessage()))
+
+  if (title) setTitle(id, title)
+}
+
 export async function runTurn(
   prompt: string,
   attachments: Attachment[],
@@ -339,7 +394,16 @@ export async function runTurn(
       return
     }
 
+    const named = currentSession()
+
     emit({ type: 'done' })
+
+    try {
+      await nameSession(named)
+      if (isNamed(named)) emit({ type: 'session', id: named })
+    } catch {
+      return
+    }
   } catch (error) {
     emit({ type: 'error', message: error instanceof Error ? error.message : String(error) })
   } finally {

@@ -2,10 +2,10 @@ import { appendFileSync, chmodSync, existsSync, mkdirSync, readFileSync, writeFi
 import { join } from 'node:path'
 import { app, shell } from 'electron'
 import { parseEntries } from '@shared/sessions'
+import { shorten } from '@shared/titleText'
 import type { SessionEntry, SessionSummary } from '@shared/sessions'
 
 const INDEX = 'index.json'
-const TITLE_LIMIT = 60
 
 let currentId = ''
 
@@ -47,8 +47,8 @@ function textOf(content: unknown): string {
 
 function titleFrom(content: unknown): string {
   const text = textOf(content).trim()
-  if (text.length === 0) return 'New chat'
-  return text.length > TITLE_LIMIT ? `${text.slice(0, TITLE_LIMIT)}...` : text
+
+  return text.length === 0 ? 'New chat' : shorten(text)
 }
 
 export function listSessions(): SessionSummary[] {
@@ -86,7 +86,27 @@ export async function deleteSession(id: string): Promise<void> {
 
 export function renameSession(id: string, title: string): void {
   const trimmed = title.trim()
-  writeIndex(readIndex().map((s) => (s.id === id ? { ...s, title: trimmed || s.title } : s)))
+
+  writeIndex(
+    readIndex().map((s) => (s.id === id ? { ...s, title: trimmed || s.title, named: true } : s))
+  )
+}
+
+export function isNamed(id: string): boolean {
+  return readIndex().find((session) => session.id === id)?.named === true
+}
+
+export function setTitle(id: string, title: string): boolean {
+  const sessions = readIndex()
+  const existing = sessions.find((session) => session.id === id)
+
+  if (!existing || existing.named === true) return false
+
+  existing.title = title
+  existing.named = true
+  writeIndex(sessions)
+
+  return true
 }
 
 export function recordUsage(tokens: number): void {

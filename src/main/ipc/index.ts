@@ -8,6 +8,7 @@ import type { TerminalSnapshot } from '@shared/terminals'
 import type { ProviderId } from '@shared/providers'
 import type { Attachment } from '@shared/attachments'
 import { MAX_ATTACHMENTS } from '@shared/attachments'
+import { pickProvider } from '@shared/providers'
 import type { FileContent, FileNode, IpcResult, Workspace } from '@shared/types'
 import { cancelTurn, loadSession, resetSession, runTurn, sessionUsage } from '../agent/session'
 import { setDirtyPaths } from '../agent/tools'
@@ -52,14 +53,18 @@ function handle<T>(channel: string, run: (...args: never[]) => Promise<T>): void
   })
 }
 
-function settings(): ChatSettings {
+function settings(resolve = false): ChatSettings {
   const preferences = readPreferences()
+  const stored = storedProviders()
+  const provider = resolve ? pickProvider(preferences.provider, stored) : preferences.provider
+
+  if (provider !== preferences.provider) writePreferences({ provider })
 
   return {
     mode: preferences.mode,
-    provider: preferences.provider,
-    model: preferences.models[preferences.provider],
-    storedKeys: storedProviders(),
+    provider,
+    model: preferences.models[provider],
+    storedKeys: stored,
     keychainAvailable: secretsAvailable()
   }
 }
@@ -99,7 +104,7 @@ export function registerIpcHandlers(): void {
     return null
   })
 
-  handle<ChatSettings>(IpcChannel.ReadSettings, async () => settings())
+  handle<ChatSettings>(IpcChannel.ReadSettings, async () => settings(true))
 
   handle<ChatSettings>(IpcChannel.WriteSettings, async (next: Partial<ChatSettings>) => {
     const patch: Parameters<typeof writePreferences>[0] = {}
@@ -123,13 +128,13 @@ export function registerIpcHandlers(): void {
   handle<ChatSettings>(IpcChannel.WriteApiKey, async (provider: ProviderId, value: string) => {
     writeApiKey(provider, value)
     forgetModels(provider)
-    return settings()
+    return settings(true)
   })
 
   handle<ChatSettings>(IpcChannel.ClearApiKey, async (provider: ProviderId) => {
     clearApiKey(provider)
     forgetModels(provider)
-    return settings()
+    return settings(true)
   })
 
   handle<null>(IpcChannel.ReportDirty, async (paths: string[]) => {

@@ -3,6 +3,7 @@ export interface SessionSummary {
   title: string
   updatedAt: string
   tokens?: number
+  named?: boolean
 }
 
 export interface SessionEntry {
