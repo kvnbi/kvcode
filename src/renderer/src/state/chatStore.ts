@@ -5,6 +5,7 @@ import type { SessionEntry, SessionSummary } from '@shared/sessions'
 import type { Attachment } from '@shared/attachments'
 import { MAX_ATTACHMENTS } from '@shared/attachments'
 import { unsupportedReason } from '@shared/models'
+import { toolSummary } from '@shared/toolText'
 import { useSettingsStore } from './settingsStore'
 import { useEditorStore } from './editorStore'
 import { usePermissionStore } from './permissionStore'
@@ -126,7 +127,7 @@ function toMessages(entries: SessionEntry[]): ChatMessage[] {
       if (block.type === 'tool_use') {
         const id = (block as { id?: string }).id
         if (id && block.name) names.set(id, block.name)
-        messages.push({ id: nextId(), role: 'tool', text: JSON.stringify(block.input), tool: block.name })
+        messages.push({ id: nextId(), role: 'tool', text: toolSummary(block.input), tool: block.name })
         continue
       }
 

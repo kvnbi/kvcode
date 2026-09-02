@@ -8,7 +8,7 @@ import type { PermissionRequest } from '@shared/permissions'
 import { useChatStore } from '@renderer/state/chatStore'
 import type { ChatMessage } from '@renderer/state/chatStore'
 import { usePermissionStore } from '@renderer/state/permissionStore'
-import { CloseIcon, CopyIcon } from './Icons'
+import { ChevronIcon, CloseIcon, CopyIcon } from './Icons'
 import { Markdown } from './Markdown'
 import { ModelBar } from './ModelBar'
 import { Panel } from './Panel'
@@ -80,11 +80,21 @@ function Message({ message }: { message: ChatMessage }) {
   }
 
   if (message.role === 'result') {
-    return <div className={styles.result}>{message.text}</div>
+    const lines = message.text.split('\n')
+
+    if (lines.length <= RESULT_LINES) return <div className={styles.result}>{message.text}</div>
+
+    return (
+      <Fold
+        summary={`${lines.length} lines of output`}
+        body={message.text}
+        bodyClass={styles.result}
+      />
+    )
   }
 
   if (message.role === 'thinking') {
-    return <div className={styles.thinking}>{message.text}</div>
+    return <Fold summary="Thinking" body={message.text} bodyClass={styles.thought} />
   }
 
   if (message.role === 'error') {
@@ -95,6 +105,20 @@ function Message({ message }: { message: ChatMessage }) {
     <div className={styles.assistant}>
       <Markdown text={message.text} />
       <CopyButton text={message.text} />
+    </div>
+  )
+}
+
+function Fold({ summary, body, bodyClass }: { summary: string; body: string; bodyClass: string }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div className={styles.fold}>
+      <button type="button" className={styles.foldToggle} onClick={() => setOpen(!open)}>
+        <ChevronIcon size={10} className={open ? styles.foldMarkOpen : styles.foldMark} />
+        {summary}
+      </button>
+      {open ? <div className={bodyClass}>{body}</div> : null}
     </div>
   )
 }
@@ -142,6 +166,7 @@ function AttachmentBubble({ attachment }: { attachment: NonNullable<ChatMessage[
 }
 
 const MAX_COMPOSER_HEIGHT = 168
+const RESULT_LINES = 6
 
 function Composer({ blocked }: { blocked: boolean }) {
   const area = useRef<HTMLTextAreaElement>(null)

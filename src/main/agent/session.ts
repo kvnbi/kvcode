@@ -14,6 +14,7 @@ import { AGENT_TOOLS, WRITING_TOOLS, runTool } from './tools'
 import { listRoots } from '../services/workspace'
 import { grantRead } from '../services/permissions'
 import { idForData, readAttachment } from '../services/attachments'
+import { toolSummary } from '@shared/toolText'
 import type { Attachment } from '@shared/attachments'
 import {
   charsFor,
@@ -225,7 +226,7 @@ async function resolveCalls(
   const results: Anthropic.ToolResultBlockParam[] = []
 
   for (const call of calls) {
-    emit({ type: 'tool', name: call.name, detail: JSON.stringify(call.input) })
+    emit({ type: 'tool', name: call.name, detail: toolSummary(call.input) })
 
     try {
       results.push({
