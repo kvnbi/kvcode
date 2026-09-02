@@ -8,7 +8,7 @@ import type { PermissionRequest } from '@shared/permissions'
 import { useChatStore } from '@renderer/state/chatStore'
 import type { ChatMessage } from '@renderer/state/chatStore'
 import { usePermissionStore } from '@renderer/state/permissionStore'
-import { ChevronIcon, CloseIcon, CopyIcon } from './Icons'
+import { ChevronIcon, CloseIcon, CopyIcon, EnterIcon } from './Icons'
 import { Markdown } from './Markdown'
 import { ModelBar } from './ModelBar'
 import { Panel } from './Panel'
@@ -175,6 +175,7 @@ function Composer({ blocked }: { blocked: boolean }) {
   const send = useChatStore((state) => state.send)
   const cancel = useChatStore((state) => state.cancel)
   const addAttachments = useChatStore((state) => state.addAttachments)
+  const attachments = useChatStore((state) => state.attachments)
 
   useEffect(() => {
     const node = area.current
@@ -190,11 +191,7 @@ function Composer({ blocked }: { blocked: boolean }) {
     node.style.overflowY = height < MAX_COMPOSER_HEIGHT ? 'hidden' : 'auto'
   }, [draft])
 
-  function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    if (event.key !== 'Enter' || event.shiftKey) return
-
-    event.preventDefault()
-
+  function submit() {
     if (isRunning) {
       void cancel()
       return
@@ -203,6 +200,13 @@ function Composer({ blocked }: { blocked: boolean }) {
     const text = draft
     setDraft('')
     void send(text)
+  }
+
+  function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key !== 'Enter' || event.shiftKey) return
+
+    event.preventDefault()
+    submit()
   }
 
   async function onPaste(event: ClipboardEvent<HTMLTextAreaElement>) {
@@ -224,19 +228,30 @@ function Composer({ blocked }: { blocked: boolean }) {
   }
 
   return (
-    <textarea
-      ref={area}
-      className={styles.input}
-      value={draft}
-      rows={1}
-      disabled={blocked}
-      placeholder={isRunning ? 'Enter to stop' : 'Message'}
-      onChange={(event) => setDraft(event.target.value)}
-      onKeyDown={onKeyDown}
-      onPaste={(event) => void onPaste(event)}
-      onDragOver={(event) => event.preventDefault()}
-      onDrop={(event) => void onDrop(event)}
-    />
+    <div className={styles.field}>
+      <textarea
+        ref={area}
+        className={styles.input}
+        value={draft}
+        rows={1}
+        disabled={blocked}
+        placeholder={isRunning ? 'Enter to stop' : 'Message'}
+        onChange={(event) => setDraft(event.target.value)}
+        onKeyDown={onKeyDown}
+        onPaste={(event) => void onPaste(event)}
+        onDragOver={(event) => event.preventDefault()}
+        onDrop={(event) => void onDrop(event)}
+      />
+      <button
+        type="button"
+        className={styles.enter}
+        disabled={blocked || (!isRunning && draft.trim().length === 0 && attachments.length === 0)}
+        title={isRunning ? 'Stop' : 'Send'}
+        onClick={submit}
+      >
+        <EnterIcon size={13} />
+      </button>
+    </div>
   )
 }
 
