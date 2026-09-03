@@ -16,7 +16,7 @@ export function TitleBar() {
 
   return (
     <header className={styles.bar}>
-      <div className={styles.brand}>KVCODE</div>
+      <div className={styles.brand}>KVCode</div>
 
       <div className={styles.toggles}>
         {PANELS.map((id) => (

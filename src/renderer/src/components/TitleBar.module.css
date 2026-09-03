@@ -13,7 +13,8 @@
   flex: none;
   padding-left: 2px;
   font-family: var(--font-ui);
-  font-size: var(--text-lg);
+  font-size: 20px;
+  line-height: 1;
   font-weight: 650;
   letter-spacing: var(--tracking-wordmark);
   color: var(--text-brand);

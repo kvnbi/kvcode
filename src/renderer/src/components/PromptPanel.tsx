@@ -331,7 +331,7 @@ export function PromptPanel({ width }: { width?: number }) {
       <div className={styles.main}>
         {messages.length === 0 && !streaming ? (
           <div className={styles.empty}>
-            <div className={styles.wordmark}>KVCODE</div>
+            <div className={styles.wordmark}>KVCode</div>
           </div>
         ) : (
           <div className={styles.thread}>

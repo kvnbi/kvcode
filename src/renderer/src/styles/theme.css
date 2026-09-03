@@ -45,14 +45,14 @@
   --font-ui: "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-code: var(--font-ui);
   --font-mono: Menlo, "SF Mono", Monaco, ui-monospace, monospace;
-  --tracking-wordmark: 0.2em;
+  --tracking-wordmark: 0.02em;
 
   --control-height: 32px;
 
   --text-xs: 11px;
   --text-sm: 12px;
   --text-md: 13px;
-  --text-xl: 30px;
+  --text-xl: 64px;
   --text-lg: 14px;
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);

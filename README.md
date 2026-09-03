@@ -1,4 +1,4 @@
-# KVCODE
+# KVCode
 
 A code editor.
 
