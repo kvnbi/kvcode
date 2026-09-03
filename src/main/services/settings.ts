@@ -1,6 +1,7 @@
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { app } from 'electron'
+import { MAX_INSTRUCTIONS } from '@shared/chat'
 import { PROVIDER_MODELS } from '@shared/providers'
 import type { ProviderId } from '@shared/providers'
 
@@ -51,18 +52,25 @@ interface Preferences {
   mode: 'direct' | 'proxy'
   provider: ProviderId
   models: Record<ProviderId, string>
+  instructions: string
 }
 
 const DEFAULT_PREFERENCES: Preferences = {
   mode: 'direct',
   provider: 'anthropic',
-  models: { ...PROVIDER_MODELS }
+  models: { ...PROVIDER_MODELS },
+  instructions: ''
 }
 
 export function readPreferences(): Preferences {
   try {
     const parsed = JSON.parse(readFileSync(target(PREFERENCES_FILE), 'utf8')) as Partial<Preferences>
-    return { ...DEFAULT_PREFERENCES, ...parsed, models: { ...PROVIDER_MODELS, ...parsed.models } }
+    return {
+      ...DEFAULT_PREFERENCES,
+      ...parsed,
+      models: { ...PROVIDER_MODELS, ...parsed.models },
+      instructions: typeof parsed.instructions === 'string' ? parsed.instructions.slice(0, MAX_INSTRUCTIONS) : ''
+    }
   } catch {
     return { ...DEFAULT_PREFERENCES }
   }

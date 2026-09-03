@@ -15,6 +15,7 @@ import {
 import { AGENT_TOOLS, WRITING_TOOLS, runTool } from './tools'
 import { listRoots } from '../services/workspace'
 import { grantRead } from '../services/permissions'
+import { readPreferences } from '../services/settings'
 import { idForData, readAttachment } from '../services/attachments'
 import { toolSummary } from '@shared/toolText'
 import { cleanTitle } from '@shared/titleText'
@@ -73,10 +74,16 @@ export function loadSession(id: string): void {
   }
 }
 
-function overhead(): number {
-  if (baseline === 0) baseline = estimateText(SYSTEM) + estimateText(JSON.stringify(AGENT_TOOLS))
+function systemPrompt(): string {
+  const extra = readPreferences().instructions.trim()
 
-  return baseline
+  return extra ? `${SYSTEM}\n\n${extra}` : SYSTEM
+}
+
+function overhead(): number {
+  if (baseline === 0) baseline = estimateText(JSON.stringify(AGENT_TOOLS))
+
+  return baseline + estimateText(systemPrompt())
 }
 
 type Block = Anthropic.ContentBlockParam
@@ -269,7 +276,7 @@ async function attempt(active: ActiveModel, emit: (event: ChatEvent) => void): P
   for (let step = 0; step < MAX_STEPS; step += 1) {
     const stream = active.transport.stream({
       model: active.model,
-      system: SYSTEM,
+      system: systemPrompt(),
       messages: history,
       tools: AGENT_TOOLS,
       maxTokens: MAX_TOKENS,

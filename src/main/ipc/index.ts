@@ -1,6 +1,7 @@
 import { BrowserWindow, dialog, ipcMain } from 'electron'
 import { IpcChannel } from '@shared/ipc'
 import type { ChatEvent, ChatSettings } from '@shared/chat'
+import { MAX_INSTRUCTIONS } from '@shared/chat'
 import type { PermissionReply } from '@shared/permissions'
 import type { SessionEntry, SessionSummary } from '@shared/sessions'
 import type { FileChange } from '@shared/changes'
@@ -64,6 +65,7 @@ function settings(resolve = false): ChatSettings {
     mode: preferences.mode,
     provider,
     model: preferences.models[provider],
+    instructions: preferences.instructions,
     storedKeys: stored,
     keychainAvailable: secretsAvailable()
   }
@@ -111,6 +113,10 @@ export function registerIpcHandlers(): void {
 
     if (next.mode) patch.mode = next.mode
     if (next.provider) patch.provider = next.provider
+
+    if (typeof next.instructions === 'string') {
+      patch.instructions = next.instructions.slice(0, MAX_INSTRUCTIONS)
+    }
 
     if (next.model) {
       const current = readPreferences()

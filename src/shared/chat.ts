@@ -16,6 +16,9 @@ export interface ChatSettings {
   mode: 'direct' | 'proxy'
   provider: ProviderId
   model: string
+  instructions: string
   storedKeys: ProviderId[]
   keychainAvailable: boolean
 }
+
+export const MAX_INSTRUCTIONS = 8000
