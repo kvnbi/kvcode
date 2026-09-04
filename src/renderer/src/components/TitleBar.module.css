@@ -9,6 +9,29 @@
   user-select: none;
 }
 
+.barShift {
+  padding-left: 88px;
+}
+
+.collapse {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+  border-radius: var(--radius-row);
+  corner-shape: var(--corner);
+  color: var(--text-faint);
+  -webkit-app-region: no-drag;
+}
+
+.collapse:hover {
+  color: var(--text-primary);
+  background-color: var(--surface-hover);
+}
+
 .brand {
   flex: none;
   padding-left: 2px;

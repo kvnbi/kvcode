@@ -8,10 +8,36 @@
   background-color: var(--surface-sidebar);
 }
 
-.drag {
+.header {
+  display: flex;
+  align-items: center;
   flex: none;
   height: var(--titlebar-height);
+  padding-left: 16px;
   -webkit-app-region: drag;
+}
+
+.headerMac {
+  padding-left: 88px;
+}
+
+.collapse {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+  border-radius: var(--radius-row);
+  corner-shape: var(--corner);
+  color: var(--text-faint);
+  -webkit-app-region: no-drag;
+}
+
+.collapse:hover {
+  color: var(--text-primary);
+  background-color: var(--surface-hover);
 }
 
 .newChat {
@@ -148,10 +174,4 @@
 .settings:hover {
   color: var(--text-primary);
   background-color: var(--surface-hover);
-}
-
-@media (max-width: 820px) {
-  .list {
-    display: none;
-  }
 }

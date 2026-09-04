@@ -15,15 +15,18 @@ const PANEL_MAX = 720
 const FLEX_MIN = 440
 const DIVIDER = 1
 const SIDEBAR = 240
+export const SIDEBAR_BREAKPOINT = 820
 
 interface LayoutState {
   chatWidth: number
   widths: Widths
   open: Open
+  sidebarCollapsed: boolean
   togglePanel: (id: PanelId) => void
   openPanel: (id: PanelId) => void
   resizeChat: (delta: number) => void
   resizePanel: (id: PanelId, delta: number) => void
+  setSidebarCollapsed: (value: boolean) => void
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -42,7 +45,8 @@ export function fitLayout(
   chatWidth: number,
   widths: Widths,
   open: Open,
-  viewport: number
+  viewport: number,
+  sidebarWidth: number = SIDEBAR
 ): { chatWidth: number; widths: Widths } {
   const panels = openPanels(open)
   const flex = flexPanel(open)
@@ -52,7 +56,7 @@ export function fitLayout(
   const promptFlexes = flex === null
   const chatUsed = promptFlexes ? 0 : chatWidth
   const used = chatUsed + fixed.reduce((total, id) => total + widths[id], 0)
-  const available = viewport - SIDEBAR - panels.length * DIVIDER - FLEX_MIN
+  const available = viewport - sidebarWidth - panels.length * DIVIDER - FLEX_MIN
 
   if (used <= available) return { chatWidth, widths }
 
@@ -104,7 +108,9 @@ export const useLayoutStore = create<LayoutState>()(
       chatWidth: 300,
       widths: { code: 640, diff: 300, output: 320, browser: 400, terminal: 300 },
       open: { code: false, diff: false, output: false, browser: false, terminal: false },
+      sidebarCollapsed: false,
       togglePanel: (id) => set((state) => ({ open: { ...state.open, [id]: !state.open[id] } })),
+      setSidebarCollapsed: (value) => set({ sidebarCollapsed: value }),
       openPanel: (id) => set((state) => ({ open: { ...state.open, [id]: true } })),
       resizeChat: (delta) =>
         set((state) => ({ chatWidth: clamp(state.chatWidth + delta, CHAT_MIN, CHAT_MAX) })),
@@ -126,7 +132,11 @@ export const useLayoutStore = create<LayoutState>()(
         setItem: (_name, value) => queueWrite(value),
         removeItem: () => queueWrite('')
       })),
-      partialize: (state) => ({ chatWidth: state.chatWidth, widths: state.widths }),
+      partialize: (state) => ({
+        chatWidth: state.chatWidth,
+        widths: state.widths,
+        sidebarCollapsed: state.sidebarCollapsed
+      }),
       merge: (persisted, current) => ({
         ...current,
         ...(persisted as Partial<LayoutState>),

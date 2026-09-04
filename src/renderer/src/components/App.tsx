@@ -1,6 +1,6 @@
 import { Fragment, Suspense, lazy, useEffect, useState } from 'react'
 import { useEditorStore } from '@renderer/state/editorStore'
-import { fitLayout, flexPanel, openPanels, useLayoutStore } from '@renderer/state/layoutStore'
+import { SIDEBAR_BREAKPOINT, fitLayout, flexPanel, openPanels, useLayoutStore } from '@renderer/state/layoutStore'
 import type { PanelId } from '@renderer/state/layoutStore'
 import { ChatList } from './ChatList'
 import { CodePanel } from './CodePanel'
@@ -48,11 +48,14 @@ export function App() {
   const chatWidth = useLayoutStore((state) => state.chatWidth)
   const widths = useLayoutStore((state) => state.widths)
   const open = useLayoutStore((state) => state.open)
+  const sidebarCollapsed = useLayoutStore((state) => state.sidebarCollapsed)
+  const setSidebarCollapsed = useLayoutStore((state) => state.setSidebarCollapsed)
   const resizeChat = useLayoutStore((state) => state.resizeChat)
   const resizePanel = useLayoutStore((state) => state.resizePanel)
   const viewport = useViewportWidth()
   const hydrated = useHydrated()
   const [showSettings, setShowSettings] = useState(false)
+  const sidebarHidden = sidebarCollapsed || viewport < SIDEBAR_BREAKPOINT
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -71,7 +74,7 @@ export function App() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
-  const fitted = fitLayout(chatWidth, widths, open, viewport)
+  const fitted = fitLayout(chatWidth, widths, open, viewport, sidebarHidden ? 0 : undefined)
   const panels = openPanels(open)
   const flexId = flexPanel(open)
   const flexPosition = flexId ? panels.indexOf(flexId) + 1 : 0
@@ -94,9 +97,14 @@ export function App() {
 
   return (
     <div className={styles.shell}>
-      <ChatList onOpenSettings={() => setShowSettings(true)} />
+      {sidebarHidden ? null : (
+        <ChatList
+          onOpenSettings={() => setShowSettings(true)}
+          onToggleSidebar={() => setSidebarCollapsed(!sidebarHidden)}
+        />
+      )}
       <div className={styles.content}>
-        <TitleBar />
+        <TitleBar sidebarHidden={sidebarHidden} onToggleSidebar={() => setSidebarCollapsed(!sidebarHidden)} />
         <div className={styles.body}>
           <PromptPanel width={flexPosition === 0 ? undefined : fitted.chatWidth} />
           {panels.map((id, index) => (

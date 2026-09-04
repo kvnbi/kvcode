@@ -107,3 +107,12 @@ export function ProviderIcon({ provider, size = 14, className }: IconProps & { p
     </svg>
   )
 }
+
+export function SidebarIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <rect x="1.2" y="2" width="13.6" height="12" rx="2.2" />
+      <path d="M5.9 2v12" />
+    </svg>
+  )
+}

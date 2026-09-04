@@ -1,10 +1,15 @@
 import { useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import { useChatStore } from '@renderer/state/chatStore'
-import { CloseIcon, GearIcon, PlusIcon } from './Icons'
+import { CloseIcon, GearIcon, PlusIcon, SidebarIcon } from './Icons'
 import styles from './ChatList.module.css'
 
-export function ChatList({ onOpenSettings }: { onOpenSettings: () => void }) {
+interface ChatListProps {
+  onOpenSettings: () => void
+  onToggleSidebar: () => void
+}
+
+export function ChatList({ onOpenSettings, onToggleSidebar }: ChatListProps) {
   const sessions = useChatStore((state) => state.sessions)
   const activeId = useChatStore((state) => state.activeId)
   const openSession = useChatStore((state) => state.openSession)
@@ -26,7 +31,16 @@ export function ChatList({ onOpenSettings }: { onOpenSettings: () => void }) {
 
   return (
     <div className={styles.list}>
-      {window.kvcode.platform === 'darwin' ? <div className={styles.drag} /> : null}
+      <div className={window.kvcode.platform === 'darwin' ? `${styles.header} ${styles.headerMac}` : styles.header}>
+        <button
+          type="button"
+          className={styles.collapse}
+          title="Hide sidebar"
+          onClick={onToggleSidebar}
+        >
+          <SidebarIcon size={15} />
+        </button>
+      </div>
 
       <button type="button" className={styles.newChat} onClick={() => void newSession()}>
         <PlusIcon size={13} />
