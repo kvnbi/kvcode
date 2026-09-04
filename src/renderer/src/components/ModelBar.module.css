@@ -8,7 +8,7 @@
 
 .usage {
   flex: none;
-  padding-right: 2px;
+  padding: 0 2px 0 4px;
   color: var(--text-faint);
   font-size: var(--text-xs);
   white-space: nowrap;
@@ -18,7 +18,6 @@
   position: relative;
   display: flex;
   min-width: 0;
-  margin-left: auto;
 }
 
 .clip {
@@ -31,6 +30,7 @@
   border: none;
   border-radius: var(--radius-row);
   corner-shape: var(--corner);
+  margin-right: auto;
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;

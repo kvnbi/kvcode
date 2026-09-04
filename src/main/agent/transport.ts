@@ -1,6 +1,7 @@
 import type Anthropic from '@anthropic-ai/sdk'
 import type { ProviderId } from '@shared/providers'
-import { PROVIDER_CHEAP } from '@shared/providers'
+import type { Effort } from '@shared/effort'
+import { PROVIDER_CHEAP, providerOf } from '@shared/providers'
 import { readPreferences } from '../services/settings'
 import { readApiKey } from '../services/secrets'
 import { createDirectTransport } from './directTransport'
@@ -12,6 +13,7 @@ export interface TransportParams {
   messages: Anthropic.MessageParam[]
   tools: Anthropic.Tool[]
   maxTokens: number
+  effort: Effort
   signal: AbortSignal
 }
 
@@ -26,10 +28,7 @@ export interface ModelTransport {
 }
 
 export const BASE_URLS: Record<Exclude<ProviderId, 'anthropic'>, string> = {
-  openai: 'https://api.openai.com/v1',
-  google: 'https://generativelanguage.googleapis.com/v1beta/openai',
-  deepseek: 'https://api.deepseek.com/v1',
-  xai: 'https://api.x.ai/v1'
+  openai: 'https://api.openai.com/v1'
 }
 
 export interface ActiveModel {
@@ -44,9 +43,9 @@ export function createTransport(cheap = false): ActiveModel {
     throw new Error('Hosted mode is not available yet. Switch to your own key in Settings.')
   }
 
-  const provider = preferences.provider
+  const provider = providerOf(preferences.model)
   const apiKey = readApiKey(provider)
-  const model = cheap ? PROVIDER_CHEAP[provider] : preferences.models[provider]
+  const model = cheap ? PROVIDER_CHEAP[provider] : preferences.model
   const override = process.env.KVCODE_BASE_URL ?? ''
 
   if (!apiKey) {

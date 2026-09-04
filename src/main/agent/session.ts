@@ -191,6 +191,7 @@ async function summarise(
     messages: [{ role: 'user', content: summaryPrompt(older, charsFor(inputBudget)) }],
     tools: [],
     maxTokens: SUMMARY_TOKENS,
+    effort: 'low',
     signal: new AbortController().signal
   })
 
@@ -280,6 +281,7 @@ async function attempt(active: ActiveModel, emit: (event: ChatEvent) => void): P
       messages: history,
       tools: AGENT_TOOLS,
       maxTokens: MAX_TOKENS,
+      effort: readPreferences().effort,
       signal: controller?.signal ?? new AbortController().signal
     })
 
@@ -353,6 +355,7 @@ async function nameSession(id: string): Promise<void> {
     messages: [{ role: 'user', content: prompt }],
     tools: [],
     maxTokens: TITLE_TOKENS,
+    effort: 'low',
     signal: new AbortController().signal
   })
 

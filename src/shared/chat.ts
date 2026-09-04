@@ -1,4 +1,5 @@
 import type { ProviderId } from './providers'
+import type { Effort } from './effort'
 
 export type ChatEvent =
   | { type: 'start' }
@@ -14,9 +15,9 @@ export type ChatEvent =
 
 export interface ChatSettings {
   mode: 'direct' | 'proxy'
-  provider: ProviderId
   model: string
   instructions: string
+  effort: Effort
   storedKeys: ProviderId[]
   keychainAvailable: boolean
 }

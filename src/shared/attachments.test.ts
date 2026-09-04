@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { kindFor, mediaTypeFor } from './attachments.ts'
 import { supportsDocuments, supportsImages, unsupportedReason } from './models.ts'
+import { PROVIDERS, PROVIDER_CATALOG } from './providers.ts'
 
 const kinds: [string, string][] = [
   ['shot.png', 'image'],
@@ -28,12 +29,11 @@ test('media types match what the vision APIs accept', () => {
 
 const vision: [string, boolean][] = [
   ['claude-opus-5', true],
-  ['claude-haiku-4-5', true],
+  ['claude-sonnet-5', true],
+  ['gpt-6-astra', true],
   ['gpt-5.6-sol', true],
-  ['gemini-3.7-flash', true],
-  ['grok-4.6', true],
-  ['deepseek-v4-pro', false],
-  ['deepseek-v4-flash', false]
+  ['gpt-5.6-terra', true],
+  ['gpt-5.6-luna', true]
 ]
 
 for (const [model, ok] of vision) {
@@ -44,10 +44,10 @@ for (const [model, ok] of vision) {
 
 const documents: [string, boolean][] = [
   ['claude-opus-5', true],
+  ['claude-sonnet-5', true],
+  ['gpt-6-astra', true],
   ['gpt-5.6-sol', true],
-  ['gemini-3.7-flash', false],
-  ['grok-4.6', false],
-  ['deepseek-v4-pro', false]
+  ['gpt-5.6-luna', true]
 ]
 
 for (const [model, ok] of documents) {
@@ -56,11 +56,12 @@ for (const [model, ok] of documents) {
   })
 }
 
-test('an unsupported image names the model in plain language', () => {
-  assert.equal(unsupportedReason('deepseek-v4-pro', 'image'), 'DeepSeek V4 Pro cannot read images')
-})
-
-test('a supported pairing gives no reason', () => {
-  assert.equal(unsupportedReason('claude-opus-5', 'image'), '')
-  assert.equal(unsupportedReason('grok-4.6', 'text'), '')
+test('every catalog model takes images and documents', () => {
+  for (const provider of PROVIDERS) {
+    for (const model of PROVIDER_CATALOG[provider]) {
+      assert.equal(unsupportedReason(model, 'image'), '')
+      assert.equal(unsupportedReason(model, 'document'), '')
+      assert.equal(unsupportedReason(model, 'text'), '')
+    }
+  }
 })

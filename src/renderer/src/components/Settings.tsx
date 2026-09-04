@@ -3,7 +3,7 @@ import { PROVIDERS, PROVIDER_LABELS } from '@shared/providers'
 import type { ProviderId } from '@shared/providers'
 import { MAX_INSTRUCTIONS } from '@shared/chat'
 import { useSettingsStore } from '@renderer/state/settingsStore'
-import { CloseIcon } from './Icons'
+import { CloseIcon, ProviderIcon } from './Icons'
 import styles from './Settings.module.css'
 
 const SECTIONS = [
@@ -11,13 +11,15 @@ const SECTIONS = [
   { id: 'instructions', label: 'Instructions' }
 ]
 
+const EMPTY_DRAFTS: Record<ProviderId, string> = { anthropic: '', openai: '' }
+
 export function Settings({ onClose }: { onClose: () => void }) {
   const settings = useSettingsStore((state) => state.settings)
   const load = useSettingsStore((state) => state.load)
   const update = useSettingsStore((state) => state.update)
   const saveApiKey = useSettingsStore((state) => state.saveKey)
   const clearApiKey = useSettingsStore((state) => state.clearKey)
-  const [keyDraft, setKeyDraft] = useState('')
+  const [keyDrafts, setKeyDrafts] = useState(EMPTY_DRAFTS)
   const [section, setSection] = useState(SECTIONS[0].id)
   const [draft, setDraft] = useState('')
   const [saved, setSaved] = useState(false)
@@ -41,20 +43,12 @@ export function Settings({ onClose }: { onClose: () => void }) {
 
   if (!settings) return null
 
-  const provider = settings.provider
-  const hasKey = settings.storedKeys.includes(provider)
-
-  async function selectProvider(next: ProviderId) {
-    setKeyDraft('')
-    await update({ provider: next })
+  async function saveKey(provider: ProviderId) {
+    await saveApiKey(provider, keyDrafts[provider].trim())
+    setKeyDrafts((prev) => ({ ...prev, [provider]: '' }))
   }
 
-  async function saveKey() {
-    await saveApiKey(provider, keyDraft.trim())
-    setKeyDraft('')
-  }
-
-  async function removeKey() {
+  async function removeKey(provider: ProviderId) {
     await clearApiKey(provider)
   }
 
@@ -95,14 +89,13 @@ export function Settings({ onClose }: { onClose: () => void }) {
 
           <div className={styles.content}>
             {section === 'instructions' ? (
-              <div className={styles.field}>
-                <div className={styles.label}>Custom instructions</div>
-                <div className={styles.hint}>Added to every message in every chat.</div>
+              <div className={styles.section}>
+                <div className={styles.sectionHeader}>Custom instructions</div>
                 <textarea
                   className={styles.area}
                   value={draft}
                   maxLength={MAX_INSTRUCTIONS}
-                  placeholder="Coding conventions, preferred tone, tools to reach for"
+                  placeholder="e.g. be concise and accurate"
                   onChange={(event) => setDraft(event.target.value)}
                 />
                 <div className={styles.row}>
@@ -118,53 +111,51 @@ export function Settings({ onClose }: { onClose: () => void }) {
                 </div>
               </div>
             ) : (
-              <>
-                <div className={styles.field}>
-                  <div className={styles.label}>Provider</div>
-                  <div className={styles.row}>
-                    {PROVIDERS.map((id) => (
-                      <button
-                        key={id}
-                        type="button"
-                        className={
-                          id === provider ? `${styles.choice} ${styles.choiceOn}` : styles.choice
-                        }
-                        onClick={() => selectProvider(id)}
-                      >
-                        {PROVIDER_LABELS[id]}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+              <div className={styles.section}>
+                <div className={styles.sectionHeader}>Providers</div>
+                {PROVIDERS.map((provider) => {
+                  const hasKey = settings.storedKeys.includes(provider)
 
-                <div className={styles.field}>
-                  <div className={styles.label}>API key</div>
-                  <div className={styles.row}>
-                    <input
-                      className={styles.input}
-                      type="password"
-                      value={keyDraft}
-                      disabled={hasKey}
-                      placeholder={hasKey ? 'Key stored' : 'Paste a key'}
-                      onChange={(event) => setKeyDraft(event.target.value)}
-                    />
-                    {hasKey ? (
-                      <button type="button" className={styles.action} onClick={removeKey}>
-                        Remove
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        className={styles.action}
-                        disabled={keyDraft.trim().length === 0}
-                        onClick={saveKey}
-                      >
-                        Save
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </>
+                  return (
+                    <div key={provider} className={styles.field}>
+                      <div className={styles.label}>
+                        <ProviderIcon provider={provider} size={14} />
+                        {PROVIDER_LABELS[provider]}
+                      </div>
+                      <div className={styles.row}>
+                        <input
+                          className={styles.input}
+                          type="password"
+                          value={keyDrafts[provider]}
+                          disabled={hasKey}
+                          placeholder={hasKey ? 'Key stored' : 'Paste a key'}
+                          onChange={(event) =>
+                            setKeyDrafts((prev) => ({ ...prev, [provider]: event.target.value }))
+                          }
+                        />
+                        {hasKey ? (
+                          <button
+                            type="button"
+                            className={styles.action}
+                            onClick={() => void removeKey(provider)}
+                          >
+                            Remove
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className={styles.action}
+                            disabled={keyDrafts[provider].trim().length === 0}
+                            onClick={() => void saveKey(provider)}
+                          >
+                            Save
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             )}
           </div>
         </div>

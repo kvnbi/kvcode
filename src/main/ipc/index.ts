@@ -2,6 +2,7 @@ import { BrowserWindow, dialog, ipcMain } from 'electron'
 import { IpcChannel } from '@shared/ipc'
 import type { ChatEvent, ChatSettings } from '@shared/chat'
 import { MAX_INSTRUCTIONS } from '@shared/chat'
+import { EFFORTS } from '@shared/effort'
 import type { PermissionReply } from '@shared/permissions'
 import type { SessionEntry, SessionSummary } from '@shared/sessions'
 import type { FileChange } from '@shared/changes'
@@ -9,7 +10,7 @@ import type { TerminalSnapshot } from '@shared/terminals'
 import type { ProviderId } from '@shared/providers'
 import type { Attachment } from '@shared/attachments'
 import { MAX_ATTACHMENTS } from '@shared/attachments'
-import { pickProvider } from '@shared/providers'
+import { pickModel } from '@shared/providers'
 import type { FileContent, FileNode, IpcResult, Workspace } from '@shared/types'
 import { cancelTurn, loadSession, resetSession, runTurn, sessionUsage } from '../agent/session'
 import { setDirtyPaths } from '../agent/tools'
@@ -57,15 +58,15 @@ function handle<T>(channel: string, run: (...args: never[]) => Promise<T>): void
 function settings(resolve = false): ChatSettings {
   const preferences = readPreferences()
   const stored = storedProviders()
-  const provider = resolve ? pickProvider(preferences.provider, stored) : preferences.provider
+  const model = resolve ? pickModel(preferences.model, stored) : preferences.model
 
-  if (provider !== preferences.provider) writePreferences({ provider })
+  if (model !== preferences.model) writePreferences({ model })
 
   return {
     mode: preferences.mode,
-    provider,
-    model: preferences.models[provider],
+    model,
     instructions: preferences.instructions,
+    effort: preferences.effort,
     storedKeys: stored,
     keychainAvailable: secretsAvailable()
   }
@@ -112,18 +113,13 @@ export function registerIpcHandlers(): void {
     const patch: Parameters<typeof writePreferences>[0] = {}
 
     if (next.mode) patch.mode = next.mode
-    if (next.provider) patch.provider = next.provider
 
     if (typeof next.instructions === 'string') {
       patch.instructions = next.instructions.slice(0, MAX_INSTRUCTIONS)
     }
 
-    if (next.model) {
-      const current = readPreferences()
-      const provider = next.provider ?? current.provider
-
-      patch.models = { ...current.models, [provider]: next.model }
-    }
+    if (next.effort && EFFORTS.includes(next.effort)) patch.effort = next.effort
+    if (next.model) patch.model = next.model
 
     writePreferences(patch)
     return settings()

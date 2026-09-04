@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { ChatSettings } from '@shared/chat'
+import { PROVIDERS } from '@shared/providers'
 import type { ProviderId } from '@shared/providers'
 
 interface SettingsState {
@@ -13,7 +14,11 @@ interface SettingsState {
 
 async function withModels(settings: ChatSettings, set: (partial: Partial<SettingsState>) => void) {
   set({ settings })
-  set({ models: await window.kvcode.listModels(settings.provider) })
+
+  const connected = PROVIDERS.filter((provider) => settings.storedKeys.includes(provider))
+  const lists = await Promise.all(connected.map((provider) => window.kvcode.listModels(provider)))
+
+  set({ models: lists.flat() })
 }
 
 export const useSettingsStore = create<SettingsState>()((set, get) => ({

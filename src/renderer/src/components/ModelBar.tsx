@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { contextWindow, formatTokens, modelLabel } from '@shared/models'
+import { effortLabel, effortsFor, resolveEffort } from '@shared/effort'
 import { useChatStore } from '@renderer/state/chatStore'
 import { ClipIcon } from './Icons'
 import { useSettingsStore } from '@renderer/state/settingsStore'
@@ -7,7 +8,7 @@ import styles from './ModelBar.module.css'
 
 const COMPACT_AT = 0.7
 
-type Menu = 'model' | null
+type Menu = 'model' | 'effort' | null
 
 export function ModelBar() {
   const settings = useSettingsStore((state) => state.settings)
@@ -29,6 +30,8 @@ export function ModelBar() {
   const ratio = tokens / limit
 
   const options = models.includes(settings.model) ? models : [settings.model, ...models]
+  const levels = effortsFor(settings.model)
+  const effort = resolveEffort(settings.model, settings.effort)
 
   return (
     <div className={styles.bar}>
@@ -42,6 +45,34 @@ export function ModelBar() {
       >
         <ClipIcon size={14} />
       </button>
+
+      <div className={styles.slot}>
+        {menu === 'effort' ? (
+          <div className={styles.menu}>
+            {levels.map((level) => (
+              <button
+                key={level}
+                type="button"
+                className={level === effort ? `${styles.item} ${styles.itemOn}` : styles.item}
+                onClick={() => {
+                  setMenu(null)
+                  void update({ effort: level })
+                }}
+              >
+                {effortLabel(level)}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        <button
+          type="button"
+          className={styles.button}
+          title="How much thinking the model spends"
+          onClick={() => setMenu(menu === 'effort' ? null : 'effort')}
+        >
+          {effortLabel(effort)}
+        </button>
+      </div>
 
       <div className={styles.slot}>
         {menu === 'model' ? (

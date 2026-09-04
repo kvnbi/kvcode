@@ -1,41 +1,39 @@
-export const PROVIDERS = ['anthropic', 'openai', 'google', 'deepseek', 'xai'] as const
+export const PROVIDERS = ['anthropic', 'openai'] as const
 
 export type ProviderId = (typeof PROVIDERS)[number]
 
 export const PROVIDER_LABELS: Record<ProviderId, string> = {
   anthropic: 'Anthropic',
-  openai: 'OpenAI',
-  google: 'Google',
-  deepseek: 'DeepSeek',
-  xai: 'Grok'
+  openai: 'OpenAI'
 }
 
 export const PROVIDER_CATALOG: Record<ProviderId, string[]> = {
-  anthropic: ['claude-opus-5', 'claude-sonnet-5', 'claude-fable-5', 'claude-haiku-4-5'],
-  openai: ['gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna'],
-  google: ['gemini-3.7-flash', 'gemini-3.1-pro'],
-  deepseek: ['deepseek-v4-pro', 'deepseek-v4-flash'],
-  xai: ['grok-4.6']
+  anthropic: ['claude-opus-5', 'claude-sonnet-5'],
+  openai: ['gpt-6-astra', 'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna']
 }
 
 export const PROVIDER_CHEAP: Record<ProviderId, string> = {
-  anthropic: 'claude-haiku-4-5',
-  openai: 'gpt-5.6-luna',
-  google: 'gemini-3.7-flash',
-  deepseek: 'deepseek-v4-flash',
-  xai: 'grok-4.6'
+  anthropic: 'claude-sonnet-5',
+  openai: 'gpt-5.6-luna'
 }
 
 export const PROVIDER_MODELS: Record<ProviderId, string> = {
   anthropic: PROVIDER_CATALOG.anthropic[0],
-  openai: PROVIDER_CATALOG.openai[0],
-  google: PROVIDER_CATALOG.google[0],
-  deepseek: PROVIDER_CATALOG.deepseek[0],
-  xai: PROVIDER_CATALOG.xai[0]
+  openai: PROVIDER_CATALOG.openai[0]
 }
 
-export function pickProvider(current: ProviderId, stored: ProviderId[]): ProviderId {
-  if (stored.length === 0 || stored.includes(current)) return current
+export function providerOf(model: string): ProviderId {
+  return model.startsWith('claude-') ? 'anthropic' : 'openai'
+}
 
-  return PROVIDERS.find((provider) => stored.includes(provider)) ?? current
+export function pickModel(current: string, stored: ProviderId[]): string {
+  if (stored.length === 0 || stored.includes(providerOf(current))) return current
+
+  const fallback = PROVIDERS.find((provider) => stored.includes(provider))
+
+  return fallback ? PROVIDER_MODELS[fallback] : current
+}
+
+export function isKnownModel(id: string): boolean {
+  return PROVIDERS.some((provider) => PROVIDER_CATALOG[provider].includes(id))
 }

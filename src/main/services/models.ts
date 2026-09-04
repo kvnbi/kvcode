@@ -53,20 +53,22 @@ export async function listModels(provider: ProviderId): Promise<string[]> {
 
   if (cached) return cached
 
-  const fallback = chatOnly(PROVIDER_CATALOG[provider])
+  const catalog = chatOnly(PROVIDER_CATALOG[provider])
   const apiKey = readApiKey(provider)
 
-  if (!apiKey) return fallback
+  if (!apiKey) return catalog
 
   try {
-    const ids = chatOnly(await fetchIds(provider, apiKey))
-    const result = ids.length > 0 ? ids : fallback
+    const live = new Set(await fetchIds(provider, apiKey))
+    const result = catalog.filter((id) => live.has(id))
+
+    if (result.length === 0) return catalog
 
     cache.set(provider, result)
 
     return result
   } catch {
-    return fallback
+    return catalog
   }
 }
 

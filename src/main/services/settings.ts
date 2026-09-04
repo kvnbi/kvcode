@@ -2,7 +2,9 @@ import { chmodSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { app } from 'electron'
 import { MAX_INSTRUCTIONS } from '@shared/chat'
-import { PROVIDER_MODELS } from '@shared/providers'
+import { DEFAULT_EFFORT, EFFORTS } from '@shared/effort'
+import type { Effort } from '@shared/effort'
+import { PROVIDER_MODELS, isKnownModel } from '@shared/providers'
 import type { ProviderId } from '@shared/providers'
 
 const LAYOUT_FILE = 'layout.json'
@@ -50,26 +52,36 @@ export function writeLayout(text: string): void {
 
 interface Preferences {
   mode: 'direct' | 'proxy'
-  provider: ProviderId
-  models: Record<ProviderId, string>
+  model: string
   instructions: string
+  effort: Effort
+}
+
+interface LegacyPreferences {
+  provider?: ProviderId
+  models?: Record<ProviderId, string>
 }
 
 const DEFAULT_PREFERENCES: Preferences = {
   mode: 'direct',
-  provider: 'anthropic',
-  models: { ...PROVIDER_MODELS },
-  instructions: ''
+  model: PROVIDER_MODELS.anthropic,
+  instructions: '',
+  effort: DEFAULT_EFFORT
 }
 
 export function readPreferences(): Preferences {
   try {
-    const parsed = JSON.parse(readFileSync(target(PREFERENCES_FILE), 'utf8')) as Partial<Preferences>
+    const parsed = JSON.parse(readFileSync(target(PREFERENCES_FILE), 'utf8')) as Partial<Preferences> &
+      LegacyPreferences
+    const legacyModel = parsed.provider && parsed.models ? parsed.models[parsed.provider] : undefined
+    const model = parsed.model ?? legacyModel
+
     return {
-      ...DEFAULT_PREFERENCES,
-      ...parsed,
-      models: { ...PROVIDER_MODELS, ...parsed.models },
-      instructions: typeof parsed.instructions === 'string' ? parsed.instructions.slice(0, MAX_INSTRUCTIONS) : ''
+      mode: parsed.mode === 'proxy' ? 'proxy' : 'direct',
+      model: model && isKnownModel(model) ? model : DEFAULT_PREFERENCES.model,
+      instructions:
+        typeof parsed.instructions === 'string' ? parsed.instructions.slice(0, MAX_INSTRUCTIONS) : '',
+      effort: EFFORTS.includes(parsed.effort as Effort) ? (parsed.effort as Effort) : DEFAULT_EFFORT
     }
   } catch {
     return { ...DEFAULT_PREFERENCES }

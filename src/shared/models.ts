@@ -1,4 +1,4 @@
-const ACRONYMS: Record<string, string> = { gpt: 'GPT', deepseek: 'DeepSeek', ai: 'AI' }
+const ACRONYMS: Record<string, string> = { gpt: 'GPT' }
 const VENDOR = new Set(['claude'])
 const VERSION = /^v?\d+(\.\d+)*$/
 const SNAPSHOT = /^\d{8}$/
@@ -63,19 +63,11 @@ export function modelLabel(id: string): string {
 }
 
 const WINDOWS: [RegExp, number][] = [
-  [/^claude-haiku/, 200000],
-  [/^claude-(opus|sonnet|fable)-[5-9]/, 1000000],
+  [/^claude-(opus|sonnet)-[5-9]/, 1000000],
   [/^claude-/, 200000],
-  [/^gemini-/, 1000000],
-  [/^gpt-5\.6/, 1050000],
+  [/^gpt-([6-9]|5\.6)/, 1050000],
   [/^gpt-5/, 400000],
-  [/^gpt-4/, 128000],
-  [/^o[0-9]/, 200000],
-  [/^grok-4\.6/, 500000],
-  [/^grok-4/, 256000],
-  [/^grok-/, 131072],
-  [/^deepseek-v[4-9]/, 1000000],
-  [/^deepseek-/, 128000]
+  [/^gpt-4/, 128000]
 ]
 
 const DEFAULT_WINDOW = 128000
@@ -106,11 +98,10 @@ export function formatTokens(count: number): string {
   return String(rounded)
 }
 
-const NO_IMAGES = /^deepseek-/
-const DOCUMENTS = /^(claude-|gpt-5)/
+const DOCUMENTS = /^(claude-|gpt-[5-9])/
 
 export function supportsImages(model: string): boolean {
-  return !NO_IMAGES.test(model)
+  return model.length > 0
 }
 
 export function supportsDocuments(model: string): boolean {

@@ -2,6 +2,7 @@ import OpenAI from 'openai'
 import type Anthropic from '@anthropic-ai/sdk'
 import type { ChatCompletionTool } from 'openai/resources/chat/completions'
 import { toMessages } from './openAiMessages'
+import { resolveEffort } from '@shared/effort'
 import type { ModelTransport, TransportParams, TransportStream } from './transport'
 
 interface PendingCall {
@@ -44,6 +45,7 @@ export function createOpenAiTransport(
               : { max_tokens: Math.min(params.maxTokens, COMPAT_MAX_TOKENS) }),
             messages: toMessages(params.system, params.messages),
             tools: toTools(params.tools),
+            reasoning_effort: resolveEffort(params.model, params.effort) as 'low',
             stream: true,
             ...(useCompletionTokens ? { stream_options: { include_usage: true } } : {})
           },
