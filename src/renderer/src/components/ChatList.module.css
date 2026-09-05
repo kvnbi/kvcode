@@ -158,17 +158,28 @@
 }
 
 .settings {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
   flex: none;
   height: 32px;
-  margin: 0 8px 8px;
+  margin: 16px 8px 8px;
   padding: 0 8px 0 12px;
   border-radius: var(--radius-row);
   corner-shape: var(--corner);
   color: var(--text-faint);
   font-size: var(--text-md);
+}
+
+.settings::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  left: -8px;
+  height: 1px;
+  background-color: var(--border-soft);
 }
 
 .settings:hover {

@@ -129,7 +129,6 @@
   flex: none;
   gap: 8px;
   padding: 16px 52px 10px;
-  border-top: 1px solid var(--border-soft);
 }
 
 .request {
