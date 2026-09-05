@@ -1,6 +1,6 @@
 import { Fragment, Suspense, lazy, useEffect, useState } from 'react'
 import { useEditorStore } from '@renderer/state/editorStore'
-import { SIDEBAR_BREAKPOINT, fitLayout, flexPanel, openPanels, useLayoutStore } from '@renderer/state/layoutStore'
+import { PANEL_LABELS, SIDEBAR_BREAKPOINT, fitLayout, flexPanel, openPanels, useLayoutStore } from '@renderer/state/layoutStore'
 import type { PanelId } from '@renderer/state/layoutStore'
 import { ChatList } from './ChatList'
 import { CodePanel } from './CodePanel'
@@ -15,14 +15,6 @@ import styles from './App.module.css'
 const TerminalPanel = lazy(() =>
   import('./TerminalPanel').then((module) => ({ default: module.TerminalPanel }))
 )
-
-const TITLES: Record<PanelId, string> = {
-  code: 'Code',
-  diff: 'Diff',
-  output: 'Output',
-  browser: 'Browser',
-  terminal: 'Terminal'
-}
 
 function useHydrated(): boolean {
   const [ready, setReady] = useState(() => useLayoutStore.persist.hasHydrated())
@@ -109,7 +101,7 @@ export function App() {
           <PromptPanel width={flexPosition === 0 ? undefined : fitted.chatWidth} />
           {panels.map((id, index) => (
             <Fragment key={id}>
-              <Divider label={`Resize ${TITLES[id]} panel`} onResize={(delta) => onDividerResize(index, delta)} />
+              <Divider label={`Resize ${PANEL_LABELS[id]} panel`} onResize={(delta) => onDividerResize(index, delta)} />
               {id === 'code' ? <CodePanel width={widthFor(id)} /> : null}
               {id === 'diff' ? <DiffPanel width={widthFor(id)} /> : null}
               {id === 'terminal' ? (
@@ -118,7 +110,7 @@ export function App() {
                 </Suspense>
               ) : null}
               {id !== 'code' && id !== 'diff' && id !== 'terminal' ? (
-                <Panel title={TITLES[id]} width={widthFor(id)} />
+                <Panel title={PANEL_LABELS[id]} width={widthFor(id)} />
               ) : null}
             </Fragment>
           ))}

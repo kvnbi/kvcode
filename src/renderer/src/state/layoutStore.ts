@@ -1,9 +1,16 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
-export const PANELS = ['code', 'diff', 'output', 'browser', 'terminal'] as const
+export const PANELS = ['code', 'diff', 'browser', 'terminal'] as const
 
 export type PanelId = (typeof PANELS)[number]
+
+export const PANEL_LABELS: Record<PanelId, string> = {
+  code: 'Code',
+  diff: 'Diff',
+  browser: 'Browser',
+  terminal: 'Terminal'
+}
 
 type Widths = Record<PanelId, number>
 type Open = Record<PanelId, boolean>
@@ -106,8 +113,8 @@ export const useLayoutStore = create<LayoutState>()(
   persist(
     (set) => ({
       chatWidth: 300,
-      widths: { code: 640, diff: 300, output: 320, browser: 400, terminal: 300 },
-      open: { code: false, diff: false, output: false, browser: false, terminal: false },
+      widths: { code: 640, diff: 300, browser: 400, terminal: 300 },
+      open: { code: false, diff: false, browser: false, terminal: false },
       sidebarCollapsed: false,
       togglePanel: (id) => set((state) => ({ open: { ...state.open, [id]: !state.open[id] } })),
       setSidebarCollapsed: (value) => set({ sidebarCollapsed: value }),
@@ -121,7 +128,7 @@ export const useLayoutStore = create<LayoutState>()(
     }),
     {
       name: 'kvcode-layout',
-      version: 1,
+      version: 2,
       migrate: (persisted) => {
         const state = { ...(persisted as Record<string, unknown>) }
         delete state.widths

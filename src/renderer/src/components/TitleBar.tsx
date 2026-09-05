@@ -1,15 +1,6 @@
-import { PANELS, useLayoutStore } from '@renderer/state/layoutStore'
-import type { PanelId } from '@renderer/state/layoutStore'
+import { PANELS, PANEL_LABELS, useLayoutStore } from '@renderer/state/layoutStore'
 import { SidebarIcon } from './Icons'
 import styles from './TitleBar.module.css'
-
-const LABELS: Record<PanelId, string> = {
-  code: 'Code',
-  diff: 'Diff',
-  output: 'Output',
-  browser: 'Browser',
-  terminal: 'Terminal'
-}
 
 interface TitleBarProps {
   sidebarHidden: boolean
@@ -45,7 +36,7 @@ export function TitleBar({ sidebarHidden, onToggleSidebar }: TitleBarProps) {
             aria-pressed={open[id]}
             onClick={() => togglePanel(id)}
           >
-            {LABELS[id]}
+            {PANEL_LABELS[id]}
           </button>
         ))}
       </div>
