@@ -7,10 +7,10 @@ import type { PermissionReply } from '@shared/permissions'
 import type { SessionEntry, SessionSummary } from '@shared/sessions'
 import type { FileChange } from '@shared/changes'
 import type { TerminalSnapshot } from '@shared/terminals'
-import type { ProviderId } from '@shared/providers'
+import type { ProviderId, SecretId } from '@shared/providers'
 import type { Attachment } from '@shared/attachments'
 import { MAX_ATTACHMENTS } from '@shared/attachments'
-import { pickModel } from '@shared/providers'
+import { isProvider, pickModel } from '@shared/providers'
 import type { FileContent, FileNode, IpcResult, Workspace } from '@shared/types'
 import { cancelTurn, loadSession, resetSession, runTurn, sessionUsage } from '../agent/session'
 import { setDirtyPaths } from '../agent/tools'
@@ -31,7 +31,7 @@ import {
   resizeTerminal,
   writeTerminal
 } from '../services/terminals'
-import { clearApiKey, secretsAvailable, storedProviders, writeApiKey } from '../services/secrets'
+import { clearApiKey, secretsAvailable, storedProviders, storedSecrets, writeApiKey } from '../services/secrets'
 import { readLayout, readPreferences, writeLayout, writePreferences } from '../services/settings'
 import {
   readDirectory,
@@ -67,7 +67,7 @@ function settings(resolve = false): ChatSettings {
     model,
     instructions: preferences.instructions,
     effort: preferences.effort,
-    storedKeys: stored,
+    storedKeys: storedSecrets(),
     keychainAvailable: secretsAvailable()
   }
 }
@@ -127,15 +127,15 @@ export function registerIpcHandlers(): void {
 
   handle<string[]>(IpcChannel.ModelList, (provider: ProviderId) => listModels(provider))
 
-  handle<ChatSettings>(IpcChannel.WriteApiKey, async (provider: ProviderId, value: string) => {
-    writeApiKey(provider, value)
-    forgetModels(provider)
+  handle<ChatSettings>(IpcChannel.WriteApiKey, async (id: SecretId, value: string) => {
+    writeApiKey(id, value)
+    if (isProvider(id)) forgetModels(id)
     return settings(true)
   })
 
-  handle<ChatSettings>(IpcChannel.ClearApiKey, async (provider: ProviderId) => {
-    clearApiKey(provider)
-    forgetModels(provider)
+  handle<ChatSettings>(IpcChannel.ClearApiKey, async (id: SecretId) => {
+    clearApiKey(id)
+    if (isProvider(id)) forgetModels(id)
     return settings(true)
   })
 

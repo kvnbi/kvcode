@@ -12,7 +12,8 @@ import {
   sessionTokens,
   startSession
 } from '../services/conversations'
-import { AGENT_TOOLS, WRITING_TOOLS, runTool } from './tools'
+import { searchReady } from '../services/websearch'
+import { WRITING_TOOLS, agentTools, runTool } from './tools'
 import { listRoots } from '../services/workspace'
 import { grantRead } from '../services/permissions'
 import { readPreferences } from '../services/settings'
@@ -53,10 +54,12 @@ const SYSTEM = [
   'Edit existing files with edit_file, replacing only the lines that change. Use write_file only for new files.'
 ].join(' ')
 
+const SEARCH_NOTE =
+  'You can search the web with web_search. Use it for anything current, for library documentation, or for facts that may have changed since training, and cite the urls you relied on.'
+
 const history: Anthropic.MessageParam[] = []
 
 let controller: AbortController | null = null
-let baseline = 0
 
 export function resetSession(): void {
   history.length = 0
@@ -76,14 +79,13 @@ export function loadSession(id: string): void {
 
 function systemPrompt(): string {
   const extra = readPreferences().instructions.trim()
+  const base = searchReady() ? `${SYSTEM} ${SEARCH_NOTE}` : SYSTEM
 
-  return extra ? `${SYSTEM}\n\n${extra}` : SYSTEM
+  return extra ? `${base}\n\n${extra}` : base
 }
 
 function overhead(): number {
-  if (baseline === 0) baseline = estimateText(JSON.stringify(AGENT_TOOLS))
-
-  return baseline + estimateText(systemPrompt())
+  return estimateText(JSON.stringify(agentTools())) + estimateText(systemPrompt())
 }
 
 type Block = Anthropic.ContentBlockParam
@@ -279,7 +281,7 @@ async function attempt(active: ActiveModel, emit: (event: ChatEvent) => void): P
       model: active.model,
       system: systemPrompt(),
       messages: history,
-      tools: AGENT_TOOLS,
+      tools: agentTools(),
       maxTokens: MAX_TOKENS,
       effort: readPreferences().effort,
       signal: controller?.signal ?? new AbortController().signal

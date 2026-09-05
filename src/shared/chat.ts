@@ -1,4 +1,4 @@
-import type { ProviderId } from './providers'
+import type { SecretId } from './providers'
 import type { Effort } from './effort'
 
 export type ChatEvent =
@@ -18,7 +18,7 @@ export interface ChatSettings {
   model: string
   instructions: string
   effort: Effort
-  storedKeys: ProviderId[]
+  storedKeys: SecretId[]
   keychainAvailable: boolean
 }
 

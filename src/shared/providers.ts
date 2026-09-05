@@ -2,6 +2,14 @@ export const PROVIDERS = ['anthropic', 'openai'] as const
 
 export type ProviderId = (typeof PROVIDERS)[number]
 
+export const SEARCH_KEY = 'tavily'
+
+export type SecretId = ProviderId | typeof SEARCH_KEY
+
+export function isProvider(id: SecretId): id is ProviderId {
+  return (PROVIDERS as readonly string[]).includes(id)
+}
+
 export const PROVIDER_LABELS: Record<ProviderId, string> = {
   anthropic: 'Anthropic',
   openai: 'OpenAI'

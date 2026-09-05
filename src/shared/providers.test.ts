@@ -5,7 +5,9 @@ import {
   PROVIDER_CATALOG,
   PROVIDER_CHEAP,
   PROVIDER_MODELS,
+  SEARCH_KEY,
   isKnownModel,
+  isProvider,
   pickModel,
   providerOf
 } from './providers.ts'
@@ -77,4 +79,10 @@ test('the catalog is exactly the six curated models', () => {
     'gpt-5.6-terra',
     'gpt-5.6-luna'
   ])
+})
+
+test('isProvider separates model providers from other secrets', () => {
+  assert.equal(isProvider('anthropic'), true)
+  assert.equal(isProvider('openai'), true)
+  assert.equal(isProvider(SEARCH_KEY), false)
 })

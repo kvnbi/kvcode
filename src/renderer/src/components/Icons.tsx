@@ -67,6 +67,15 @@ export function PlusIcon({ size = 14, className }: IconProps) {
   )
 }
 
+export function SearchIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <circle cx="7.2" cy="7.2" r="4.6" />
+      <path d="M10.6 10.6L13.6 13.6" />
+    </svg>
+  )
+}
+
 export function ClipIcon({ size = 14, className }: IconProps) {
   return (
     <svg {...base(size)} strokeWidth={1.2} className={className}>

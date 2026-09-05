@@ -1,11 +1,12 @@
 import { chmodSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { app, safeStorage } from 'electron'
-import type { ProviderId } from '@shared/providers'
+import type { ProviderId, SecretId } from '@shared/providers'
+import { isProvider } from '@shared/providers'
 
 const FILE = 'credentials.bin'
 
-type KeyMap = Partial<Record<ProviderId, string>>
+type KeyMap = Partial<Record<SecretId, string>>
 
 function target(): string {
   return join(app.getPath('userData'), FILE)
@@ -40,24 +41,28 @@ function writeAll(keys: KeyMap): void {
   chmodSync(file, 0o600)
 }
 
-export function readApiKey(provider: ProviderId): string | null {
-  return readAll()[provider] ?? null
+export function readApiKey(id: SecretId): string | null {
+  return readAll()[id] ?? null
+}
+
+export function storedSecrets(): SecretId[] {
+  return Object.keys(readAll()) as SecretId[]
 }
 
 export function storedProviders(): ProviderId[] {
-  return Object.keys(readAll()) as ProviderId[]
+  return storedSecrets().filter(isProvider)
 }
 
-export function writeApiKey(provider: ProviderId, value: string): void {
+export function writeApiKey(id: SecretId, value: string): void {
   if (!secretsAvailable()) {
     throw new Error('The system keychain is unavailable, so the key cannot be stored securely')
   }
 
-  writeAll({ ...readAll(), [provider]: value })
+  writeAll({ ...readAll(), [id]: value })
 }
 
-export function clearApiKey(provider: ProviderId): void {
+export function clearApiKey(id: SecretId): void {
   const keys = readAll()
-  delete keys[provider]
+  delete keys[id]
   writeAll(keys)
 }

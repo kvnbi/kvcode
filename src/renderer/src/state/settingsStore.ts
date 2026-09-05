@@ -1,15 +1,15 @@
 import { create } from 'zustand'
 import type { ChatSettings } from '@shared/chat'
 import { PROVIDERS } from '@shared/providers'
-import type { ProviderId } from '@shared/providers'
+import type { SecretId } from '@shared/providers'
 
 interface SettingsState {
   settings: ChatSettings | null
   models: string[]
   load: () => Promise<void>
   update: (patch: Partial<ChatSettings>) => Promise<void>
-  saveKey: (provider: ProviderId, value: string) => Promise<void>
-  clearKey: (provider: ProviderId) => Promise<void>
+  saveKey: (id: SecretId, value: string) => Promise<void>
+  clearKey: (id: SecretId) => Promise<void>
 }
 
 async function withModels(settings: ChatSettings, set: (partial: Partial<SettingsState>) => void) {

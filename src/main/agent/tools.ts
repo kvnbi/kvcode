@@ -6,12 +6,26 @@ import { recordChange } from '../services/changes'
 import { cleanEnvironment } from '../services/environment'
 import { isCommandGranted, requestPermission } from '../services/permissions'
 import { findFiles, searchText } from '../services/search'
+import { searchReady, webSearch } from '../services/websearch'
 import { listRoots, readDirectory, readTextFile, writeTextFile } from '../services/workspace'
 
 const COMMAND_TIMEOUT = 120000
 const MAX_OUTPUT = 20000
 
 export const WRITING_TOOLS = new Set(['edit_file', 'write_file'])
+
+const SEARCH_TOOL: Anthropic.Tool = {
+  name: 'web_search',
+  description:
+    'Search the web and return the top results as title, url and a short extract. Use this for anything current, for library documentation, or for facts that may have changed since training. Cite the urls you rely on.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      query: { type: 'string', description: 'What to search for' }
+    },
+    required: ['query']
+  }
+}
 
 export const AGENT_TOOLS: Anthropic.Tool[] = [
   {
@@ -135,7 +149,15 @@ function assertWritable(path: string): void {
   }
 }
 
+export function agentTools(): Anthropic.Tool[] {
+  return searchReady() ? [...AGENT_TOOLS, SEARCH_TOOL] : AGENT_TOOLS
+}
+
 export async function runTool(name: string, input: unknown): Promise<string> {
+  if (name === 'web_search') {
+    return webSearch(required(input, 'query', 'web_search'))
+  }
+
   if (name === 'list_files') {
     const path = field(input, 'path')
 

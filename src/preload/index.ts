@@ -4,7 +4,7 @@ import type { PermissionReply, PermissionRequest } from '@shared/permissions'
 import type { SessionEntry, SessionSummary } from '@shared/sessions'
 import type { FileChange } from '@shared/changes'
 import type { TerminalChunk, TerminalSnapshot } from '@shared/terminals'
-import type { ProviderId } from '@shared/providers'
+import type { ProviderId, SecretId } from '@shared/providers'
 import { IpcChannel } from '@shared/ipc'
 import type { Attachment } from '@shared/attachments'
 import type { FileContent, FileNode, IpcResult, Workspace } from '@shared/types'
@@ -31,9 +31,9 @@ const api = {
   readSettings: () => unwrap<ChatSettings>(IpcChannel.ReadSettings),
   writeSettings: (next: Partial<ChatSettings>) => unwrap<ChatSettings>(IpcChannel.WriteSettings, next),
   listModels: (provider: ProviderId) => unwrap<string[]>(IpcChannel.ModelList, provider),
-  writeApiKey: (provider: ProviderId, value: string) =>
-    unwrap<ChatSettings>(IpcChannel.WriteApiKey, provider, value),
-  clearApiKey: (provider: ProviderId) => unwrap<ChatSettings>(IpcChannel.ClearApiKey, provider),
+  writeApiKey: (id: SecretId, value: string) =>
+    unwrap<ChatSettings>(IpcChannel.WriteApiKey, id, value),
+  clearApiKey: (id: SecretId) => unwrap<ChatSettings>(IpcChannel.ClearApiKey, id),
   sendChat: (prompt: string, attachments: Attachment[]) =>
     unwrap<null>(IpcChannel.ChatSend, prompt, attachments),
   cancelChat: () => unwrap<null>(IpcChannel.ChatCancel),

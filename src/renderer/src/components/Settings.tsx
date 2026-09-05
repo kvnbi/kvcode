@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { PROVIDERS, PROVIDER_LABELS } from '@shared/providers'
-import type { ProviderId } from '@shared/providers'
+import type { ReactNode } from 'react'
+import { PROVIDERS, PROVIDER_LABELS, SEARCH_KEY } from '@shared/providers'
+import type { SecretId } from '@shared/providers'
 import { MAX_INSTRUCTIONS } from '@shared/chat'
 import { useSettingsStore } from '@renderer/state/settingsStore'
-import { CloseIcon, ProviderIcon } from './Icons'
+import { CloseIcon, ProviderIcon, SearchIcon } from './Icons'
 import styles from './Settings.module.css'
 
 const SECTIONS = [
@@ -11,7 +12,47 @@ const SECTIONS = [
   { id: 'instructions', label: 'Instructions' }
 ]
 
-const EMPTY_DRAFTS: Record<ProviderId, string> = { anthropic: '', openai: '' }
+const EMPTY_DRAFTS: Record<SecretId, string> = { anthropic: '', openai: '', tavily: '' }
+
+interface KeyFieldProps {
+  id: SecretId
+  label: string
+  icon: ReactNode
+  draft: string
+  stored: boolean
+  onChange: (value: string) => void
+  onSave: () => void
+  onRemove: () => void
+}
+
+function KeyField({ id, label, icon, draft, stored, onChange, onSave, onRemove }: KeyFieldProps) {
+  return (
+    <div key={id} className={styles.field}>
+      <div className={styles.label}>
+        {icon}
+        {label}
+      </div>
+      <div className={styles.row}>
+        <input
+          className={styles.input}
+          type="password"
+          value={draft}
+          disabled={stored}
+          placeholder={stored ? 'Key stored' : 'Paste a key'}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <button
+          type="button"
+          className={styles.action}
+          disabled={!stored && draft.trim().length === 0}
+          onClick={stored ? onRemove : onSave}
+        >
+          {stored ? 'Remove' : 'Save'}
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export function Settings({ onClose }: { onClose: () => void }) {
   const settings = useSettingsStore((state) => state.settings)
@@ -43,13 +84,13 @@ export function Settings({ onClose }: { onClose: () => void }) {
 
   if (!settings) return null
 
-  async function saveKey(provider: ProviderId) {
-    await saveApiKey(provider, keyDrafts[provider].trim())
-    setKeyDrafts((prev) => ({ ...prev, [provider]: '' }))
+  async function saveKey(id: SecretId) {
+    await saveApiKey(id, keyDrafts[id].trim())
+    setKeyDrafts((prev) => ({ ...prev, [id]: '' }))
   }
 
-  async function removeKey(provider: ProviderId) {
-    await clearApiKey(provider)
+  async function removeKey(id: SecretId) {
+    await clearApiKey(id)
   }
 
   async function saveInstructions() {
@@ -113,48 +154,30 @@ export function Settings({ onClose }: { onClose: () => void }) {
             ) : (
               <div className={styles.section}>
                 <div className={styles.sectionHeader}>Providers</div>
-                {PROVIDERS.map((provider) => {
-                  const hasKey = settings.storedKeys.includes(provider)
-
-                  return (
-                    <div key={provider} className={styles.field}>
-                      <div className={styles.label}>
-                        <ProviderIcon provider={provider} size={14} />
-                        {PROVIDER_LABELS[provider]}
-                      </div>
-                      <div className={styles.row}>
-                        <input
-                          className={styles.input}
-                          type="password"
-                          value={keyDrafts[provider]}
-                          disabled={hasKey}
-                          placeholder={hasKey ? 'Key stored' : 'Paste a key'}
-                          onChange={(event) =>
-                            setKeyDrafts((prev) => ({ ...prev, [provider]: event.target.value }))
-                          }
-                        />
-                        {hasKey ? (
-                          <button
-                            type="button"
-                            className={styles.action}
-                            onClick={() => void removeKey(provider)}
-                          >
-                            Remove
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            className={styles.action}
-                            disabled={keyDrafts[provider].trim().length === 0}
-                            onClick={() => void saveKey(provider)}
-                          >
-                            Save
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
+                {PROVIDERS.map((provider) => (
+                  <KeyField
+                    key={provider}
+                    id={provider}
+                    label={PROVIDER_LABELS[provider]}
+                    icon={<ProviderIcon provider={provider} size={14} />}
+                    draft={keyDrafts[provider]}
+                    stored={settings.storedKeys.includes(provider)}
+                    onChange={(value) => setKeyDrafts((prev) => ({ ...prev, [provider]: value }))}
+                    onSave={() => void saveKey(provider)}
+                    onRemove={() => void removeKey(provider)}
+                  />
+                ))}
+                <div className={styles.sectionHeader}>Web search</div>
+                <KeyField
+                  id={SEARCH_KEY}
+                  label="Tavily"
+                  icon={<SearchIcon size={14} />}
+                  draft={keyDrafts[SEARCH_KEY]}
+                  stored={settings.storedKeys.includes(SEARCH_KEY)}
+                  onChange={(value) => setKeyDrafts((prev) => ({ ...prev, [SEARCH_KEY]: value }))}
+                  onSave={() => void saveKey(SEARCH_KEY)}
+                  onRemove={() => void removeKey(SEARCH_KEY)}
+                />
               </div>
             )}
           </div>
