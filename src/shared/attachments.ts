@@ -19,7 +19,6 @@ export const IMAGE_TYPES: Record<string, string> = {
 
 export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024
 export const MAX_ATTACHMENTS = 10
-export const MAX_TEXT_CHARS = 200000
 
 export function kindFor(name: string): AttachmentKind {
   const extension = name.split('.').pop()?.toLowerCase() ?? ''

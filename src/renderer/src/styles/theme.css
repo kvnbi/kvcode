@@ -26,6 +26,7 @@
   --text-on-accent: var(--kv-ink-850);
   --accent-ring: rgba(255, 255, 255, 0.32);
   --state-neutral: var(--kv-silver-200);
+  --state-warn: var(--kv-signal-warn);
   --surface-selected: var(--kv-ink-400);
 
   --scrollbar-thumb: rgba(255, 255, 255, 0.08);

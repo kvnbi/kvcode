@@ -8,7 +8,7 @@ import type { PermissionRequest } from '@shared/permissions'
 import { useChatStore } from '@renderer/state/chatStore'
 import type { ChatMessage } from '@renderer/state/chatStore'
 import { usePermissionStore } from '@renderer/state/permissionStore'
-import { ChevronIcon, CloseIcon, CopyIcon, EnterIcon } from './Icons'
+import { ChevronIcon, CloseIcon, EnterIcon } from './Icons'
 import { Markdown } from './Markdown'
 import { ModelBar } from './ModelBar'
 import { Panel } from './Panel'
@@ -61,6 +61,54 @@ function Request({ request }: { request: PermissionRequest }) {
   )
 }
 
+function group(messages: ChatMessage[]): ChatMessage[][] {
+  const groups: ChatMessage[][] = []
+
+  for (const message of messages) {
+    const last = groups[groups.length - 1]
+
+    if (last && last.length === 1 && last[0].role === 'tool' && OUTPUT.has(message.role)) {
+      last.push(message)
+      continue
+    }
+
+    groups.push([message])
+  }
+
+  return groups
+}
+
+function Output({ message }: { message: ChatMessage }) {
+  const tone = message.role === 'error' ? `${styles.output} ${styles.bad}` : styles.output
+  const lines = message.text.split('\n')
+
+  if (lines.length <= RESULT_LINES) {
+    return (
+      <div className={styles.quote}>
+        <div className={tone}>{message.text}</div>
+      </div>
+    )
+  }
+
+  return <Fold summary={`${lines.length} lines`} body={message.text} bodyClass={tone} />
+}
+
+function Run({ items }: { items: ChatMessage[] }) {
+  const [head, output] = items
+
+  if (head.role !== 'tool') return <Message message={head} />
+
+  return (
+    <div className={styles.run}>
+      <div className={styles.tool}>
+        <span className={styles.toolName}>{head.tool}</span>
+        <span className={styles.toolArgs}>{head.text}</span>
+      </div>
+      {output ? <Output message={output} /> : null}
+    </div>
+  )
+}
+
 function Message({ message }: { message: ChatMessage }) {
   if (message.attachment) {
     return <AttachmentBubble attachment={message.attachment} />
@@ -70,76 +118,28 @@ function Message({ message }: { message: ChatMessage }) {
     return <div className={styles.user}>{message.text}</div>
   }
 
-  if (message.role === 'tool') {
-    return (
-      <div className={styles.tool}>
-        <span className={styles.toolName}>{message.tool}</span>
-        <span className={styles.toolArgs}>{message.text}</span>
-      </div>
-    )
-  }
-
-  if (message.role === 'result') {
-    const lines = message.text.split('\n')
-
-    if (lines.length <= RESULT_LINES) return <div className={styles.result}>{message.text}</div>
-
-    return (
-      <Fold
-        summary={`${lines.length} lines of output`}
-        body={message.text}
-        bodyClass={styles.result}
-      />
-    )
+  if (OUTPUT.has(message.role)) {
+    return <Output message={message} />
   }
 
   if (message.role === 'thinking') {
     return <Fold summary="Thinking" body={message.text} bodyClass={styles.thought} />
   }
 
-  if (message.role === 'error') {
-    return <div className={styles.error}>{message.text}</div>
-  }
-
-  return (
-    <div className={styles.assistant}>
-      <Markdown text={message.text} />
-      <CopyButton text={message.text} />
-    </div>
-  )
+  return <Markdown text={message.text} />
 }
 
 function Fold({ summary, body, bodyClass }: { summary: string; body: string; bodyClass: string }) {
   const [open, setOpen] = useState(false)
 
   return (
-    <div className={styles.fold}>
+    <div className={styles.quote}>
       <button type="button" className={styles.foldToggle} onClick={() => setOpen(!open)}>
         <ChevronIcon size={10} className={open ? styles.foldMarkOpen : styles.foldMark} />
         {summary}
       </button>
       {open ? <div className={bodyClass}>{body}</div> : null}
     </div>
-  )
-}
-
-function CopyButton({ text }: { text: string }) {
-  const [done, setDone] = useState(false)
-
-  return (
-    <button
-      type="button"
-      className={styles.copy}
-      title={done ? 'Copied' : 'Copy'}
-      onClick={() => {
-        void navigator.clipboard.writeText(text)
-        setDone(true)
-        setTimeout(() => setDone(false), 1200)
-      }}
-    >
-      <CopyIcon size={12} />
-      {done ? 'Copied' : 'Copy'}
-    </button>
   )
 }
 
@@ -167,6 +167,7 @@ function AttachmentBubble({ attachment }: { attachment: NonNullable<ChatMessage[
 
 const MAX_COMPOSER_HEIGHT = 168
 const RESULT_LINES = 6
+const OUTPUT = new Set(['result', 'error'])
 
 function Composer({ blocked }: { blocked: boolean }) {
   const area = useRef<HTMLTextAreaElement>(null)
@@ -335,8 +336,8 @@ export function PromptPanel({ width }: { width?: number }) {
           </div>
         ) : (
           <div className={styles.thread}>
-            {messages.map((message) => (
-              <Message key={message.id} message={message} />
+            {group(messages).map((items) => (
+              <Run key={items[0].id} items={items} />
             ))}
             {streaming ? <Markdown text={streaming} /> : null}
             {isRunning && !streaming ? <div className={styles.working}>Working</div> : null}
